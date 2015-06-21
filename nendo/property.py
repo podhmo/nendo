@@ -36,6 +36,7 @@ class NamedProperty(object):
 
 class ConcreteProperty(c.Expr):
     __slots__ = ("record", "name", "_key")
+    infix = "."
 
     def __init__(self, record, name, key):
         self.record = record

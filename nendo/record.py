@@ -3,26 +3,21 @@ from .langhelpers import as_python_code
 from . import condition as c
 
 
-class As(object):
-    def __init__(self, core, name):
-        self.name = name
-        self.core = core
-
-    def get_name(self):
-        return self.name
-
-    def __getattr__(self, k):
-        return getattr(self.core, k)
-
-
 class RecordMeta(type):
     pass
 
 
-class Record(RecordMeta("RecordBase", (), {})):
+RecordBase = RecordMeta("RecordBase", (), {})
+
+
+class Record(RecordBase):
     @classmethod
     def get_name(cls):
-        return getattr(cls, "tablename", None) or cls.__name__
+        return getattr(cls, "_name", None) or cls.__name__
+
+    @classmethod
+    def tables(cls):
+        yield cls
 
     @classmethod
     def join(cls, other, *args):
@@ -42,7 +37,7 @@ class Record(RecordMeta("RecordBase", (), {})):
 
 
 @as_python_code
-def make_record(m, name, template):
+def make_record(m, clsname, template, name=None):
     """
     >>> make_record("Foo",  "x, y, z")
     """
@@ -51,12 +46,15 @@ def make_record(m, name, template):
     m.env["Record"] = Record
     m.env["NamedProperty"] = NamedProperty
 
-    names = [x.strip() for x in template.replace(",", "").split(" ") if x != ""]
-    with m.class_(name, "Record"):
-        if names:
-            with m.method("__init__", ", ".join(names)):
-                for name in names:
-                    fmt = "self._{name} = {name}"
-                    m.stmt(fmt.format(name=name))
-        for name in names:
-            m.stmt("{name} = NamedProperty({name!r})".format(name=name))
+    attrs = [x.strip() for x in template.replace(",", "").split(" ") if x != ""]
+    with m.class_(clsname, "Record"):
+        if attrs:
+            with m.method("__init__", ", ".join(attrs)):
+                for attr in attrs:
+                    fmt = "self._{attr} = {attr}"
+                    m.stmt(fmt.format(attr=attr))
+        for attr in attrs:
+            m.stmt("{attr} = NamedProperty({attr!r})".format(attr=attr))
+
+        if name is not None:
+            m.stmt("_name = {!r}".format(name))

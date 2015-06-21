@@ -1,10 +1,12 @@
 # -*- coding:utf-8 -*-
 from singledispatch import singledispatch
 from .query import Query
-from .clause import Clause
+from .clause import Clause, SubSelect
 from .condition import BOp, PreOp, PostOp, TriOp
-from .record import RecordMeta, As
+from .record import RecordMeta
 from .property import ConcreteProperty
+from .alias import AliasRecord, AliasProperty, QueryRecord
+from .value import Value
 
 
 @singledispatch
@@ -14,6 +16,8 @@ def compiler(v, context):
 
 @compiler.register(Query)
 def on_query(query, context):
+    query.validate(context)
+
     r = []
     if query._select.is_empty():
         r.append("SELECT *")
@@ -30,7 +34,16 @@ def on_query(query, context):
 
 @compiler.register(Clause)
 def on_clause(clause, context):
-    return "{} {}".format(clause.name, ", ".join(compiler(e, context) for e in clause.args))
+    return "{} {}".format(clause.get_name(), ", ".join(compiler(e, context) for e in clause.args))
+
+
+@compiler.register(SubSelect)
+def on_swap_select(clause, context):
+    args = []
+    for e in clause.args:
+        column_name = compiler(e, context)
+        args.append("{} as {}".format(column_name, column_name.replace(".", "_")))
+    return "{} {}".format(clause.get_name(), ", ".join(args))
 
 
 @compiler.register(BOp)
@@ -59,16 +72,43 @@ def on_triop(op, context):
     return " ".join(r)
 
 
+@compiler.register(QueryRecord)
+def on_query_record(record, context):
+    return "({}) as {}".format(
+        compiler(record.query, context),
+        record.get_name()
+    )
+
+
 @compiler.register(RecordMeta)
 def on_record(record, context):
     return record.get_name()
 
 
-@compiler.register(As)
-def on_alias(ob, context):
-    return "(({}) as {})".format(compiler(ob.core, context), ob.name)
+@compiler.register(AliasRecord)
+def on_alias_record(record, context):
+    return record.get_name()
 
 
 @compiler.register(ConcreteProperty)
 def on_property(prop, context):
     return "{}.{}".format(prop.record.get_name(), prop.name)
+
+
+@compiler.register(AliasProperty)
+def on_alias_property(prop, context):
+    return "{} as {}".format(compiler(prop.prop, context), prop.name)
+
+
+@compiler.register(Value)
+def on_value(v, context):
+    v = v.value
+    if v is None:
+        return "NULL"
+    elif isinstance(v, str):
+        return "'{}'".format(v)
+    elif isinstance(v, bool):
+        return "{}".format(int(v))
+    else:
+        return str(v)
+    raise NotImplementedError(v)

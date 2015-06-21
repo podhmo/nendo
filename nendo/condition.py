@@ -20,7 +20,7 @@ class UOp(Expr):
 
     def __init__(self, value, env=None):
         self.value = value
-        super(UOp, self).__init__(env=env)
+        super().__init__(env=env)
 
     def __repr__(self):
         return "<U: {} {} {}>".format(self.op, self.value)
@@ -45,13 +45,13 @@ class BOp(Expr):
     def __init__(self, left, right, env=None):
         self.left = left
         self.right = right
-        super(BOp, self).__init__(env=env)
+        super().__init__(env=env)
 
     def __repr__(self):
         return "<B: {} {} {}>".format(self.op, self.left, self.right)
 
 
-class TriOp(Expr):
+class TriOp(Expr):  # todo: move
     op = ""
     __slots__ = ("left", "right", "args", "_env")
 
@@ -59,10 +59,17 @@ class TriOp(Expr):
         self.left = left
         self.right = right
         self.args = args
-        super(TriOp, self).__init__(env=env)
+        super().__init__(env=env)
 
     def __repr__(self):
         return "<T: {} {} {} {}>".format(self.op, self.left, self.right, self.args)
+
+    def tables(self):
+        yield from self.left.tables()
+        yield from self.right.tables()
+
+    def swap(self, name):
+        return self  # xxx
 
 
 @registry

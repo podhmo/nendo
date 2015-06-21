@@ -6,9 +6,8 @@ registry = Registry()
 
 
 class Clause(object):
-    @property
-    def name(self):
-        return self.__class__.__name__.upper()
+    def get_name(self):
+        return getattr(self, "_name", None) or self.__class__.__name__.upper()
 
     def make(self, *args):
         return self.__class__(*self.args, env=self.env.make())
@@ -23,17 +22,41 @@ class Clause(object):
 
 @registry
 class Select(Clause):
-    pass
+    def __getattr__(self, k):
+        for e in self.args:
+            if e.name == k:
+                return e
+        raise AttributeError(k)
+
+    @property
+    def props(self):
+        return self.args
+
+
+class SubSelect(Select):
+    _name = "SELECT"
 
 
 @registry
 class From(Clause):
-    pass
+    def __getattr__(self, k):
+        for record in self.tables:
+            if record.get_name() == k:
+                return record
+        raise AttributeError(k)
+
+    @property
+    def tables(self):
+        for record in self.args:
+            yield from record.tables()
 
 
 @registry
 class Where(Clause):
-    pass
+    @property
+    def tables(self):
+        for cond in self.args:
+            yield from cond.tables()
 
 
 @registry
