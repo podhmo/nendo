@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 from .langhelpers import Registry, reify
 from .env import Env
+from .lifting import lift
+
 
 registry = Registry()
 
@@ -12,6 +14,22 @@ class Expr(object):
 
     def __init__(self, env=None):
         self._env = env
+
+    @lift
+    def __and__(self, other):
+        return And(self, other)
+
+    @lift
+    def __rand__(self, other):
+        return And(other, self)
+
+    @lift
+    def __or__(self, other):
+        return Or(self, other)
+
+    @lift
+    def __ror__(self, other):
+        return Or(other, self)
 
 
 class UOp(Expr):

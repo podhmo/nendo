@@ -10,17 +10,17 @@ class QueryRecord(object):
     """record like object from query"""
     def __init__(self, query, name):
         self.query = query.swap(name)
-        self.name = name
+        self._name = name
 
     def __getattr__(self, k):
         value = getattr(self.query._from, k)
         if isinstance(value, RecordMeta):  # xxx:
-            value = AliasRecord(value, self.name, prefix="{}_".format(value.get_name()))
+            value = AliasRecord(value, self._name, prefix="{}_".format(value.get_name()))
             setattr(self, k, value)
         return value
 
     def get_name(self):
-        return self.name
+        return self._name
 
     def tables(self):
         yield self

@@ -1,21 +1,5 @@
-import functools
-from . import inspect as i
 from . import condition as c
-from .value import Value
-
-
-def lift(method):
-    @functools.wraps(method)
-    def _lift(self, other):
-        if other is None:
-            value = method(self, None)
-        elif not i.is_expr(other):
-            value = method(self, Value(other))
-        else:
-            value = method(self, other)
-        value.env.merge(self, other)  # side effect
-        return value
-    return _lift
+from .lifting import lift
 
 
 class NamedProperty(object):
@@ -42,6 +26,7 @@ class ConcreteProperty(c.Expr):
         self.record = record
         self.name = name
         self._key = key
+        super().__init__()
 
     def tables(self):
         yield self.record
@@ -80,22 +65,6 @@ class ConcreteProperty(c.Expr):
     @lift
     def __rdiv__(self, other):
         return c.Div(other, self)
-
-    @lift
-    def __and__(self, other):
-        return c.And(self, other)
-
-    @lift
-    def __rand__(self, other):
-        return c.And(other, self)
-
-    @lift
-    def __or__(self, other):
-        return c.Or(self, other)
-
-    @lift
-    def __ror__(self, other):
-        return c.Or(other, self)
 
     @lift
     def __gt__(self, other):

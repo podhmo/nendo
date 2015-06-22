@@ -9,6 +9,9 @@ class Env(object):
 
     def merge(self, *targets):
         for t in targets:
-            if hasattr(t, "env"):
-                for k, v in t.env.items():
+            # broken?
+            while hasattr(t, "env"):
+                t = t.env
+            if hasattr(t, "items"):
+                for k, v in t.items():
                     self.env[k] = v
