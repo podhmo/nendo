@@ -1,11 +1,7 @@
 # -*- coding:utf-8 -*-
 import functools
 from .langhelpers import reify
-from .langhelpers import Registry
 from .env import Env
-
-
-registry = Registry()
 
 
 def lift(method):
@@ -133,127 +129,102 @@ class Not(PreOp):
     op = "NOT"
 
 
-@registry
 class Asc(PostOp):
     op = "ASC"
 
 
-@registry
 class Desc(PostOp):
     op = "DESC"
 
 
-@registry
 class Add(BOp):
     op = '+'
 
 
-@registry
 class Sub(BOp):
     op = '-'
 
 
-@registry
 class Mul(BOp):
     op = '*'
 
 
-@registry
 class Div(BOp):
     op = '/'
 
 
-@registry
 class Gt(BOp):
     op = '>'
 
 
-@registry
 class Lt(BOp):
     op = '<'
 
 
-@registry
 class Ge(BOp):
     op = '>='
 
 
-@registry
 class Le(BOp):
     op = '<='
 
 
-@registry
 class And(BOp):
     op = 'AND'
 
 
-@registry
 class Or(BOp):
     op = 'OR'
 
 
-@registry
 class Eq(BOp):
     op = '='
 
 
-@registry
 class Ne(BOp):
     op = '<>'
 
 
-@registry
 class Is(BOp):
     op = 'IS'
 
 
-@registry
 class In(BOp):
     op = 'IN'
 
 
-@registry
 class NotIn(BOp):
     op = 'NOT IN'
 
 
-@registry
 class Between(BOp):
     op = "BETWEEN"
 
 
-@registry
 class Like(BOp):
     op = 'LIKE'
 
 
-@registry
 class Ilike(BOp):
     op = 'ILIKE'
 
 
 # join conditon
-@registry
 class Join(TriOp):
     op = "JOIN"
 
 
-@registry
 class LeftOuterJoin(TriOp):
     op = "LEFT OUTER JOIN"
 
 
-@registry
 class RightOuterJoin(TriOp):
     op = "RIGHT OUTER JOIN"
 
 
-@registry
 class FullOuterJoin(TriOp):
     op = "FULL OUTER JOIN"
 
 
-@registry
 class CrossJoin(TriOp):
     op = "CROSS JOIN"

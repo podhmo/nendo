@@ -1,8 +1,5 @@
 # -*- coding:utf-8 -*-
-from .langhelpers import Registry
 from .env import Env
-
-registry = Registry()
 
 
 class Clause(object):
@@ -20,7 +17,6 @@ class Clause(object):
         return not bool(self.args)
 
 
-@registry
 class Select(Clause):
     def __getattr__(self, k):
         for e in self.args:
@@ -37,7 +33,6 @@ class SubSelect(Select):
     _name = "SELECT"
 
 
-@registry
 class From(Clause):
     def __getattr__(self, k):
         for record in self.tables:
@@ -51,7 +46,6 @@ class From(Clause):
             yield from record.tables()
 
 
-@registry
 class Where(Clause):
     def __init__(self, *args, env=None):
         super().__init__(*args, env=env)
@@ -68,12 +62,10 @@ class Where(Clause):
             yield from cond.tables()
 
 
-@registry
 class OrderBy(Clause):
     _name = "ORDER BY"
     pass
 
 
-@registry
 class Having(Clause):
     pass
