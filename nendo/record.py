@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from .langhelpers import as_python_code
-from . import condition as c
+from . import expr
 
 
 class RecordMeta(type):
@@ -21,19 +21,19 @@ class Record(RecordBase):
 
     @classmethod
     def join(cls, other, *args):
-        return c.Join(cls, other, args)
+        return expr.Join(cls, other, args)
 
     @classmethod
     def left_outer_join(cls, other, *args):
-        return c.LeftOuterJoin(cls, other, args)
+        return expr.LeftOuterJoin(cls, other, args)
 
     @classmethod
     def right_outer_join(cls, other, *args):
-        return c.RightOuterJoin(cls, other, args)
+        return expr.RightOuterJoin(cls, other, args)
 
     @classmethod
     def cross_join(cls, other, *args):
-        return c.CrossJoin(cls, other, args)
+        return expr.CrossJoin(cls, other, args)
 
 
 @as_python_code

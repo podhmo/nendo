@@ -2,7 +2,7 @@
 from singledispatch import singledispatch
 from .query import Query
 from .clause import Clause, SubSelect
-from .condition import BOp, PreOp, PostOp, TriOp
+from .expr import BOp, PreOp, PostOp, TriOp
 from .record import RecordMeta
 from .property import ConcreteProperty
 from .alias import AliasRecord, AliasProperty, QueryRecord

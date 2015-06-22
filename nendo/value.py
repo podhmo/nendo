@@ -1,7 +1,7 @@
-from . import condition as c
+from .expr import Expr
 
 
-class Value(c.Expr):
+class Value(Expr):
     """constant value"""
     def __init__(self, value):
         super().__init__()

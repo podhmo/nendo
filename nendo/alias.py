@@ -3,7 +3,7 @@ from singledispatch import singledispatch
 from .record import RecordMeta
 from .property import ConcreteProperty
 from .query import Query
-from . import condition as c
+from . import expr
 
 
 class QueryRecord(object):
@@ -26,16 +26,16 @@ class QueryRecord(object):
         yield self
 
     def join(self, other, *args):
-        return c.Join(self, other, args)
+        return expr.Join(self, other, args)
 
     def left_outer_join(self, other, *args):
-        return c.LeftOuterJoin(self, other, args)
+        return expr.LeftOuterJoin(self, other, args)
 
     def right_outer_join(self, other, *args):
-        return c.RightOuterJoin(self, other, args)
+        return expr.RightOuterJoin(self, other, args)
 
     def cross_join(self, other, *args):
-        return c.CrossJoin(self, other, args)
+        return expr.CrossJoin(self, other, args)
 
 
 class AliasRecord(object):

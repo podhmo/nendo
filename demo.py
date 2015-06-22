@@ -38,6 +38,7 @@ pp(Query().from_(T.join(T1, T.id == T1.id)).select(T.name, T1.name))
 subq = alias(Query().from_(T.join(G, T.id == G.t_id)).select(T.name, G.name), "subq")
 pp(Query().from_(T.join(subq)).where(T.id >= 1, T.id <= 10).select(T.id, subq.G.name))
 
+# pp(Query().from_(T).select(fn.count(T.id)))
 # on, whereについてandとかorでつなげていく形が正しい
 # subq.nameをエラーにしたい
 # subqueryでselectに要素追加したい

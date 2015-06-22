@@ -1,10 +1,26 @@
 # -*- coding:utf-8 -*-
-from .langhelpers import Registry, reify
+import functools
+from .langhelpers import reify
+from .langhelpers import Registry
 from .env import Env
-from .lifting import lift
 
 
 registry = Registry()
+
+
+def lift(method):
+    @functools.wraps(method)
+    def _lift(self, other):
+        if other is None:
+            value = method(self, None)
+        elif not isinstance(other, Expr):
+            from .value import Value
+            value = method(self, Value(other))
+        else:
+            value = method(self, other)
+        value.env.merge(self, other)  # side effect
+        return value
+    return _lift
 
 
 class Expr(object):

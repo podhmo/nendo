@@ -1,5 +1,5 @@
-from . import condition as c
-from .lifting import lift
+from . import expr
+from .expr import lift, Expr
 
 
 class NamedProperty(object):
@@ -18,7 +18,7 @@ class NamedProperty(object):
         return getattr(ob, self._key)
 
 
-class ConcreteProperty(c.Expr):
+class ConcreteProperty(Expr):
     __slots__ = ("record", "name", "_key")
     infix = "."
 
@@ -36,92 +36,92 @@ class ConcreteProperty(c.Expr):
 
     @lift
     def __add__(self, other):
-        return c.Add(self, other)
+        return expr.Add(self, other)
 
     @lift
     def __radd__(self, other):
-        return c.Add(other, self)
+        return expr.Add(other, self)
 
     @lift
     def __sub__(self, other):
-        return c.Sub(self, other)
+        return expr.Sub(self, other)
 
     @lift
     def __rsub__(self, other):
-        return c.Sub(other, self)
+        return expr.Sub(other, self)
 
     @lift
     def __mul__(self, other):
-        return c.Mul(self, other)
+        return expr.Mul(self, other)
 
     @lift
     def __rmul__(self, other):
-        return c.Mul(other, self)
+        return expr.Mul(other, self)
 
     @lift
     def __div__(self, other):
-        return c.Div(self, other)
+        return expr.Div(self, other)
 
     @lift
     def __rdiv__(self, other):
-        return c.Div(other, self)
+        return expr.Div(other, self)
 
     @lift
     def __gt__(self, other):
-        return c.Gt(self, other)
+        return expr.Gt(self, other)
 
     @lift
     def __lt__(self, other):
-        return c.Lt(self, other)
+        return expr.Lt(self, other)
 
     @lift
     def __ge__(self, other):
-        return c.Ge(self, other)
+        return expr.Ge(self, other)
 
     @lift
     def __le__(self, other):
-        return c.Le(self, other)
+        return expr.Le(self, other)
 
     @lift
     def __eq__(self, other):
         if other is None:
-            return c.self.is_(None)
-        return c.Eq(self, other)
+            return expr.self.is_(None)
+        return expr.Eq(self, other)
 
     @lift
     def __ne__(self, other):
         if other is None:
-            return c.self.is_not(None)
-        return c.Ne(self, other)
+            return expr.self.is_not(None)
+        return expr.Ne(self, other)
 
     @lift
     def is_(self, other):
-        return c.Is(self, other)
+        return expr.Is(self, other)
 
     @lift
     def is_not(self, other):
-        return c.Is(self, c.Not(other))
+        return expr.Is(self, expr.Not(other))
 
     @lift
     def in_(self, other):
-        return c.In(self, other)
+        return expr.In(self, other)
 
     @lift
     def not_in(self, other):
-        return c.NotIn(self, other)
+        return expr.NotIn(self, other)
 
     @lift
     def like(self, other):
-        return c.Like(self, other)
+        return expr.Like(self, other)
 
     @lift
     def ilike(self, other):
-        return c.Ilike(self, other)
+        return expr.Ilike(self, other)
 
     @lift
     def rlike(self, other):
-        return c.Like(other, self)
+        return expr.Like(other, self)
 
     @lift
     def rilike(self, other):
-        return c.Ilike(other, self)
+        return expr.Ilike(other, self)
