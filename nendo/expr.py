@@ -1,11 +1,11 @@
 # -*- coding:utf-8 -*-
-import functools
+from functools import wraps, partial
 from .langhelpers import reify
 from .env import Env
 
 
 def lift(method):
-    @functools.wraps(method)
+    @wraps(method)
     def _lift(self, other):
         if other is None:
             value = method(self, None)
@@ -48,10 +48,10 @@ class Expr(object):
 
 
 class UOp(Expr):
-    op = ""
-    __slots__ = ("value", "_env")
+    __slots__ = ("op", "value", "_env")
 
-    def __init__(self, value, env=None):
+    def __init__(self, op, value, env=None):
+        self.op = op
         self.value = value
         super().__init__(env=env)
 
@@ -75,10 +75,10 @@ class PostOp(UOp):
 
 
 class BOp(Expr):
-    op = ""
-    __slots__ = ("left", "right", "_env")
+    __slots__ = ("op", "left", "right", "_env")
 
-    def __init__(self, left, right, env=None):
+    def __init__(self, op, left, right, env=None):
+        self.op = op
         self.left = left
         self.right = right
         super().__init__(env=env)
@@ -92,10 +92,10 @@ class BOp(Expr):
 
 
 class TriOp(Expr):  # todo: move
-    op = ""
-    __slots__ = ("left", "right", "args", "_env")
+    __slots__ = ("op", "left", "right", "args", "_env")
 
-    def __init__(self, left, right, args, env=None):
+    def __init__(self, op, left, right, args, env=None):
+        self.op = op
         self.left = left
         self.right = right
         self.args = args
@@ -123,108 +123,29 @@ class TriOp(Expr):  # todo: move
     def cross_join(self, other, *args):
         return CrossJoin(self, other, args)
 
-
-@registry
-class Not(PreOp):
-    op = "NOT"
-
-
-class Asc(PostOp):
-    op = "ASC"
-
-
-class Desc(PostOp):
-    op = "DESC"
-
-
-class Add(BOp):
-    op = '+'
-
-
-class Sub(BOp):
-    op = '-'
-
-
-class Mul(BOp):
-    op = '*'
-
-
-class Div(BOp):
-    op = '/'
-
-
-class Gt(BOp):
-    op = '>'
-
-
-class Lt(BOp):
-    op = '<'
-
-
-class Ge(BOp):
-    op = '>='
-
-
-class Le(BOp):
-    op = '<='
-
-
-class And(BOp):
-    op = 'AND'
-
-
-class Or(BOp):
-    op = 'OR'
-
-
-class Eq(BOp):
-    op = '='
-
-
-class Ne(BOp):
-    op = '<>'
-
-
-class Is(BOp):
-    op = 'IS'
-
-
-class In(BOp):
-    op = 'IN'
-
-
-class NotIn(BOp):
-    op = 'NOT IN'
-
-
-class Between(BOp):
-    op = "BETWEEN"
-
-
-class Like(BOp):
-    op = 'LIKE'
-
-
-class Ilike(BOp):
-    op = 'ILIKE'
-
-
-# join conditon
-class Join(TriOp):
-    op = "JOIN"
-
-
-class LeftOuterJoin(TriOp):
-    op = "LEFT OUTER JOIN"
-
-
-class RightOuterJoin(TriOp):
-    op = "RIGHT OUTER JOIN"
-
-
-class FullOuterJoin(TriOp):
-    op = "FULL OUTER JOIN"
-
-
-class CrossJoin(TriOp):
-    op = "CROSS JOIN"
+Not = partial(PreOp, "NOT")
+Asc = partial(PostOp, "ASC")
+Desc = partial(PostOp, "DESC")
+Add = partial(BOp, "+")
+Sub = partial(BOp, '-')
+Mul = partial(BOp, '*')
+Div = partial(BOp, '/')
+Gt = partial(BOp, '>')
+Lt = partial(BOp, '<')
+Ge = partial(BOp, '>=')
+Le = partial(BOp, '<=')
+And = partial(BOp, 'AND')
+Or = partial(BOp, 'OR')
+Eq = partial(BOp, '=')
+Ne = partial(BOp, '<>')
+Is = partial(BOp, 'IS')
+In = partial(BOp, 'IN')
+NotIn = partial(BOp, 'NOT IN')
+Between = partial(BOp, "BETWEEN")
+Like = partial(BOp, 'LIKE')
+Ilike = partial(BOp, 'ILIKE')
+Join = partial(TriOp, "JOIN")
+LeftOuterJoin = partial(TriOp, "LEFT OUTER JOIN")
+RightOuterJoin = partial(TriOp, "RIGHT OUTER JOIN")
+FullOuterJoin = partial(TriOp, "FULL OUTER JOIN")
+CrossJoin = partial(TriOp, "CROSS JOIN")
