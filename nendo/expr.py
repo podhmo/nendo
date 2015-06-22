@@ -47,6 +47,9 @@ class Expr(object):
     def __ror__(self, other):
         return Or(other, self)
 
+    def __invert__(self):
+        return Not(self)
+
 
 class UOp(Expr):
     op = ""
@@ -112,10 +115,32 @@ class TriOp(Expr):  # todo: move
     def swap(self, name):
         return self  # xxx
 
+    def join(self, other, *args):
+        return Join(self, other, args)
+
+    def left_outer_join(self, other, *args):
+        return LeftOuterJoin(self, other, args)
+
+    def right_outer_join(self, other, *args):
+        return RightOuterJoin(self, other, args)
+
+    def cross_join(self, other, *args):
+        return CrossJoin(self, other, args)
+
 
 @registry
 class Not(PreOp):
     op = "NOT"
+
+
+@registry
+class Asc(PostOp):
+    op = "ASC"
+
+
+@registry
+class Desc(PostOp):
+    op = "DESC"
 
 
 @registry
@@ -194,6 +219,11 @@ class NotIn(BOp):
 
 
 @registry
+class Between(BOp):
+    op = "BETWEEN"
+
+
+@registry
 class Like(BOp):
     op = 'LIKE'
 
@@ -226,4 +256,4 @@ class FullOuterJoin(TriOp):
 
 @registry
 class CrossJoin(TriOp):
-    op = "Cross JOIN"
+    op = "CROSS JOIN"

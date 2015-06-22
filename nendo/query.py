@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from itertools import chain
-from .clause import SubSelect, Select, Where, From, Having
+from .clause import SubSelect, Select, Where, From, OrderBy, Having
 from .env import Env
 from .exceptions import ConflictName, MissingName
 
@@ -10,18 +10,20 @@ class Alias(object):
 
 
 class Query(object):
-    def __init__(self, select=None, where=None, from_=None, having=None, env=None):
+    def __init__(self, select=None, where=None, from_=None, having=None, order_by=None, env=None):
         self.env = env or Env()
         self._select = select or Select()
         self._where = where or Where()
         self._from = from_ or From()
+        self._order_by = order_by or OrderBy()
         self._having = having or Having()
 
-    def make(self, select=None, where=None, from_=None, having=None, env=None):
+    def make(self, select=None, where=None, from_=None, having=None, order_by=None, env=None):
         return self.__class__(
             select=select or self._select.make(),
             where=where or self._where.make(),
             from_=from_ or self._from.make(),
+            order_by=order_by or self._order_by.make(),
             having=having or self._having.make(),
             env=env or self.env.make()
         )
@@ -40,6 +42,9 @@ class Query(object):
 
     def from_(self, *args):
         return self.make(from_=From(*chain(self._from.args, args)))
+
+    def order_by(self, *args):
+        return self.make(order_by=OrderBy(*chain(self._order_by.args, args)))
 
     def having(self, *args):
         return self.make(having=Having(*chain(self._having.args, args)))

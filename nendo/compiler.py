@@ -27,6 +27,8 @@ def on_query(query, context):
         r.append(compiler(query._from, context))
     if not query._where.is_empty():
         r.append(compiler(query._where, context))
+    if not query._order_by.is_empty():
+        r.append(compiler(query._order_by, context))
     if not query._having.is_empty():
         r.append(compiler(query._having, context))
     return " ".join(r)
@@ -58,7 +60,7 @@ def on_preop(op, context):
 
 @compiler.register(PostOp)
 def on_postop(op, context):
-    return "({} {})".format(compiler(op.value, context), op.op)
+    return "{} {}".format(compiler(op.value, context), op.op)
 
 
 @compiler.register(TriOp)
@@ -87,7 +89,7 @@ def on_record(record, context):
 
 @compiler.register(AliasRecord)
 def on_alias_record(record, context):
-    return record.get_name()
+    return "{} as {}".format(compiler(record._core, context), record.get_name())
 
 
 @compiler.register(ConcreteProperty)
@@ -105,6 +107,14 @@ def on_value(v, context):
     v = v.value
     if v is None:
         return "NULL"
+    elif isinstance(v, (list, tuple)):
+        r = []
+        for e in v:
+            if isinstance(e, Value):
+                r.append(compiler(e, context))
+            else:
+                r.append(compiler(Value(e), context))
+        return "({})".format(", ".join(r))
     elif isinstance(v, str):
         return "'{}'".format(v)
     elif isinstance(v, bool):

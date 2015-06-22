@@ -111,6 +111,10 @@ class ConcreteProperty(Expr):
         return expr.NotIn(self, other)
 
     @lift
+    def between(self, other):
+        return expr.Between(self, other)
+
+    @lift
     def like(self, other):
         return expr.Like(self, other)
 
@@ -125,3 +129,9 @@ class ConcreteProperty(Expr):
     @lift
     def rilike(self, other):
         return expr.Ilike(other, self)
+
+    def asc(self):
+        return expr.Asc(self)
+
+    def desc(self):
+        return expr.Desc(self)

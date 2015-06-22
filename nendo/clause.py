@@ -69,5 +69,11 @@ class Where(Clause):
 
 
 @registry
+class OrderBy(Clause):
+    _name = "ORDER BY"
+    pass
+
+
+@registry
 class Having(Clause):
     pass
