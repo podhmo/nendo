@@ -10,6 +10,9 @@ class Value(c.Expr):
     def __repr__(self):
         return "<V: {}>".format(self.value)
 
+    def tables(self):
+        return []
+
 
 class Prepared(Value):
     """using for prepared statement"""

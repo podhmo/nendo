@@ -22,6 +22,9 @@ class UOp(Expr):
         self.value = value
         super().__init__(env=env)
 
+    def tables(self):
+        yield from self.value.tables()
+
     def __repr__(self):
         return "<U: {} {} {}>".format(self.op, self.value)
 
@@ -46,6 +49,10 @@ class BOp(Expr):
         self.left = left
         self.right = right
         super().__init__(env=env)
+
+    def tables(self):
+        yield from self.left.tables()
+        yield from self.right.tables()
 
     def __repr__(self):
         return "<B: {} {} {}>".format(self.op, self.left, self.right)

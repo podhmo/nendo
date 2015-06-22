@@ -55,7 +55,9 @@ class Query(object):
             if prop.record.get_name() not in table_name_set:
                 raise MissingName("{}.{}".format(prop.record.get_name(), prop.name))
         # where validation
-        # TODO:
+        for table in set(self._where.tables):
+            if table.get_name() not in table_name_set:
+                raise MissingName(table.get_name())
 
 
 class ValidationError(Exception):

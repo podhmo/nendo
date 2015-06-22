@@ -1,5 +1,5 @@
 from nendo import make_record, Query, alias
-from nendo.query import ConflictName
+from nendo.query import ConflictName, MissingName
 from nendo.compiler import compiler
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
@@ -22,9 +22,17 @@ try:
 except ConflictName as e:
     print("conflict:", e)
 try:
-    pp(Query().from_(T).where(G.id >= 1))  # todo: fix
-except ConflictName as e:
-    print("conflict:", e)
+    pp(Query().from_(T).where(G.id >= 1))
+except MissingName as e:
+    print("missing:", e)
+try:
+    pp(Query().from_(T1).where(T.id >= 1))
+except MissingName as e:
+    print("missing:", e)
+try:
+    pp(Query().from_(T).where(T1.id >= 1))
+except MissingName as e:
+    print("missing:", e)
 
 pp(Query().from_(T.join(T1, T.id == T1.id)).select(T.name, T1.name))
 subq = alias(Query().from_(T.join(G, T.id == G.t_id)).select(T.name, G.name), "subq")

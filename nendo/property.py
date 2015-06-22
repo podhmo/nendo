@@ -43,6 +43,9 @@ class ConcreteProperty(c.Expr):
         self.name = name
         self._key = key
 
+    def tables(self):
+        yield self.record
+
     def __repr__(self):
         return "<P: {}>".format(self.name)
 
