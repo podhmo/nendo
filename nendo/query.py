@@ -2,6 +2,7 @@
 from itertools import chain
 from .clause import SubSelect, Select, Where, From, Having
 from .env import Env
+from .exceptions import ConflictName, MissingName
 
 
 class Alias(object):
@@ -58,15 +59,3 @@ class Query(object):
         for table in set(self._where.tables):
             if table.get_name() not in table_name_set:
                 raise MissingName(table.get_name())
-
-
-class ValidationError(Exception):
-    pass
-
-
-class ConflictName(ValidationError):
-    pass
-
-
-class MissingName(ValidationError):
-    pass
