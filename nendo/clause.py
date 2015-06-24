@@ -91,4 +91,15 @@ class OrderBy(Clause):
 
 
 class Having(Clause):
+    def __init__(self, *args, env=None):
+        super().__init__(*args, env=env)
+        if len(self.args) > 1:
+            # where(<cond>, <cond>) == where(<cond> and <cond>)
+            cond = self.args[0]
+            for e in self.args[1:]:
+                cond = cond.__and__(e)
+            self.args = [cond]
+
+
+class Limit(Clause):
     pass

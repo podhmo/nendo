@@ -36,6 +36,8 @@ def on_query(query, context, force=False):
         r.append(compiler(query._order_by, context, force=force))
     if not query._having.is_empty():
         r.append(compiler(query._having, context, force=force))
+    if not query._limit.is_empty():
+        r.append(compiler(query._limit, context, force=force))
     return " ".join(r)
 
 

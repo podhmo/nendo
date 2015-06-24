@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from itertools import chain
-from .clause import Select, Where, From, OrderBy, Having
+from .clause import Select, Where, From, OrderBy, Having, Limit
 from .env import Env
 from .exceptions import ConflictName, MissingName
 
@@ -10,21 +10,23 @@ class Alias(object):
 
 
 class Query(object):
-    def __init__(self, select=None, where=None, from_=None, having=None, order_by=None, env=None):
+    def __init__(self, select=None, where=None, from_=None, having=None, order_by=None, limit=None, env=None):
         self.env = env or Env()
         self._select = select or Select()
         self._where = where or Where()
         self._from = from_ or From()
         self._order_by = order_by or OrderBy()
         self._having = having or Having()
+        self._limit = limit or Limit()
 
-    def make(self, select=None, where=None, from_=None, having=None, order_by=None, env=None):
+    def make(self, select=None, where=None, from_=None, having=None, order_by=None, limit=None, env=None):
         return self.__class__(
             select=select or self._select.make(),
             where=where or self._where.make(),
             from_=from_ or self._from.make(),
             order_by=order_by or self._order_by.make(),
             having=having or self._having.make(),
+            limit=limit or self._limit.make(),
             env=env or self.env.make()
         )
 
@@ -34,20 +36,41 @@ class Query(object):
             from_=self._from.swap(self, name)
         )
 
-    def select(self, *args):
-        return self.make(select=Select(*chain(self._select.args, args)))
+    def select(self, *args, replace=False):
+        if replace:
+            return self.make(select=Select(*args))
+        else:
+            return self.make(select=Select(*chain(self._select.args, args)))
 
-    def where(self, *args):
-        return self.make(where=Where(*chain(self._where.args, args)))
+    def where(self, *args, replace=False):
+        if replace:
+            return self.make(where=Where(*args))
+        else:
+            return self.make(where=Where(*chain(self._where.args, args)))
 
-    def from_(self, *args):
-        return self.make(from_=From(*chain(self._from.args, args)))
+    def from_(self, *args, replace=False):
+        if replace:
+            return self.make(from_=From(*args))
+        else:
+            return self.make(from_=From(*chain(self._from.args, args)))
 
-    def order_by(self, *args):
-        return self.make(order_by=OrderBy(*chain(self._order_by.args, args)))
+    def order_by(self, *args, replace=False):
+        if replace:
+            return self.make(order_by=OrderBy(*args))
+        else:
+            return self.make(order_by=OrderBy(*chain(self._order_by.args, args)))
 
-    def having(self, *args):
-        return self.make(having=Having(*chain(self._having.args, args)))
+    def having(self, *args, replace=False):
+        if replace:
+            return self.make(having=Having(*args))
+        else:
+            return self.make(having=Having(*chain(self._having.args, args)))
+
+    def limit(self, *args, replace=False):
+        if replace:
+            return self.make(limit=Limit(*args))
+        else:
+            return self.make(limit=Limit(*chain(self._limit.args, args)))
 
     def _table_validation(self, context):
         # from validation

@@ -28,6 +28,13 @@ class Tests(unittest.TestCase):
         expected = 'SELECT (0 = 0)'
         self.assertEqual(result, expected)
 
+    def test_normally(self):
+        T = self._makeRecord("T", "id, name")
+        target = self._makeQuery().from_(T).where(T.id < 10).select(T.id, T.name).limit(1).order_by(T.id.desc())
+        result = self._callFUT(target, {})
+        expected = "SELECT T.id, T.name FROM T WHERE (T.id < 10) ORDER BY T.id DESC LIMIT 1"
+        self.assertEqual(result, expected)
+
     def test_join(self):
         T1 = self._makeRecord("T1", "id")
         T2 = self._makeRecord("T2", "id t1_id")
