@@ -12,20 +12,12 @@ class AliasRecordProperty(ConcreteProperty):
         super().__init__(alias, name, prop._key)
         self.prop = prop
 
-    @property
-    def original_name(self):
-        return self.name
-
 
 class AliasExpressionProperty(ConcreteProperty):
     def __init__(self, alias, prop, prefix=""):
         name = "{}{}".format(prefix, prop.name)
         super().__init__(alias, name, prop._key)
         self.prop = prop
-
-    @property
-    def original_name(self):
-        return self.name
 
 
 class AliasProperty(ConcreteProperty):  # todo: cache via weak reference
@@ -110,6 +102,9 @@ class QueryRecord(object):
 
     def tables(self):
         yield self
+
+    def props(self):
+        yield from self.query.props()
 
 
 class QueryBodyRecord(QueryRecord):

@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from .env import Env
+from .property import ConcreteProperty
 
 
 class Clause(object):
@@ -27,9 +28,26 @@ class Select(Clause):
     def props(self):
         return self.args
 
+    def swap(self, query, name):
+        return SubSelect(*[_SubSelectProperty(query, e) for e in self.args])
+
 
 class SubSelect(Select):
     _name = "SELECT"
+
+
+class _SubSelectProperty(ConcreteProperty):
+    def __init__(self, query, prop):
+        super().__init__(prop.record, prop.name, prop._key)
+        self.query = query
+        self.prop = prop
+
+    @property
+    def projection_name(self):
+        return "{}_{}".format(self.prop.record.get_name(), self.prop.name)
+
+    def __getattr__(self, k):
+        return getattr(self.prop, k)
 
 
 class From(Clause):
@@ -46,6 +64,9 @@ class From(Clause):
     def props(self):
         for t in self.tables():
             yield from t.props()
+
+    def swap(self, query, name):
+        return self.__class__(*[e.swap(name) for e in self.args])
 
 
 class Where(Clause):
@@ -65,7 +86,6 @@ class Where(Clause):
 
 class OrderBy(Clause):
     _name = "ORDER BY"
-    pass
 
 
 class Having(Clause):

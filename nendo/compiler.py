@@ -22,6 +22,9 @@ def on_query(query, context, force=False):
     r = []
     if query._select.is_empty():
         r.append("SELECT *")
+        # r.append("SELECT")
+        # for p in query.props():
+        #     r.append(compiler(p, context, force=force))
     else:
         r.append(compiler(query._select, context, force=force))
     if not query._from.is_empty():
@@ -45,7 +48,7 @@ def on_swap_select(clause, context, force=False):
     args = []
     for e in clause.args:
         column_name = compiler(e, context, force=force)
-        args.append("{} as {}".format(column_name, column_name.replace(".", "_")))
+        args.append("{} as {}".format(column_name, e.projection_name))
     return "{} {}".format(clause.get_name(), ", ".join(args))
 
 

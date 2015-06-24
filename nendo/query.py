@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from itertools import chain
-from .clause import SubSelect, Select, Where, From, OrderBy, Having
+from .clause import Select, Where, From, OrderBy, Having
 from .env import Env
 from .exceptions import ConflictName, MissingName
 
@@ -30,8 +30,8 @@ class Query(object):
 
     def swap(self, name):
         return self.make(
-            select=SubSelect(*self._select.args),
-            from_=From(*[e.swap(name) for e in self._from.args])
+            select=self._select.swap(self, name),
+            from_=self._from.swap(self, name)
         )
 
     def select(self, *args):
@@ -68,11 +68,7 @@ class Query(object):
                     raise MissingName(table.get_name())
 
     def _column_validation(self, context):
-        prop_name_set = set([p.name for p in self._from.props()])
-        sprop_name_set = set([p.original_name for p in self._select.props()])
-        fprop_name_set = set([p.original_name for c in self._from.args for p in c.props()])
-        print("@@", prop_name_set, "@", sprop_name_set, "@@", fprop_name_set, "@@@")
-
+        prop_name_set = set([p.projection_name for p in self._from.props()])
         # select validation
         for p in self._select.props():
             if p.original_name not in prop_name_set:

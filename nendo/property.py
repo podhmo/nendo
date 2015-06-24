@@ -19,7 +19,7 @@ class NamedProperty(object):
 
 
 class ConcreteProperty(Expr):
-    __slots__ = ("record", "name", "_key")
+    __slots__ = ("record", "_key")
     infix = "."
 
     def __init__(self, record, name, key):
@@ -36,6 +36,10 @@ class ConcreteProperty(Expr):
 
     @property
     def original_name(self):
+        return self.name
+
+    @property
+    def projection_name(self):
         return self.name
 
     def __repr__(self):
