@@ -83,8 +83,8 @@ class Tests(unittest.TestCase):
 
     def test_subquery_as_record(self):
         from nendo.alias import alias
-        tb2 = self._makeRecord("tb2", "id id2")
         tb1 = self._makeRecord("tb1", "id tb2_id")
+        tb2 = self._makeRecord("tb2", "id id2")
         q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
         sub_q = alias(q, "sub_q")
         target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb2.id2))
@@ -103,15 +103,16 @@ class Tests(unittest.TestCase):
         with self.assertRaises(ConflictName):
             self._callFUT(target, {})
 
-    # def test_subquery_as_record__conflict__at_join(self):
-    #     from nendo.alias import alias
-    #     tb2 = self._makeRecord("tb2", "id id2")
-    #     tb1 = self._makeRecord("tb1", "id tb2_id")
-    #     q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
-    #     sub_q = alias(q, "sub_q")
-    #     target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb1.id))
-    #     result = self._callFUT(target, {})
-    #     print(result)
+    def test_subquery_as_record__conflict__at_join(self):
+        from nendo.alias import alias
+        from nendo.exceptions import ConflictName
+        tb2 = self._makeRecord("tb2", "id id2")
+        tb1 = self._makeRecord("tb1", "id tb2_id")
+        q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
+        sub_q = alias(q, "sub_q")
+        target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb1.id))
+        with self.assertRaises(ConflictName):
+            self._callFUT(target, {})
 
     def test_subquery_as_column(self):
         from nendo.alias import alias

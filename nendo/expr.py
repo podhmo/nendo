@@ -58,6 +58,9 @@ class UOp(Expr):
     def tables(self):
         yield from self.value.tables()
 
+    def props(self):
+        yield from self.value
+
     def __repr__(self):
         return "<U: {} {} {}>".format(self.op, self.value)
 
@@ -87,6 +90,10 @@ class BOp(Expr):
         yield from self.left.tables()
         yield from self.right.tables()
 
+    def props(self):
+        yield from self.left.props()
+        yield from self.right.props()
+
     def __repr__(self):
         return "<B: {} {} {}>".format(self.op, self.left, self.right)
 
@@ -107,6 +114,10 @@ class TriOp(Expr):  # todo: move
     def tables(self):
         yield from self.left.tables()
         yield from self.right.tables()
+
+    def props(self):
+        for cond in self.args:
+            yield from cond.props()
 
     def swap(self, name):
         return self  # xxx

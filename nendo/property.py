@@ -31,6 +31,9 @@ class ConcreteProperty(Expr):
     def tables(self):
         yield self.record
 
+    def props(self):
+        yield self
+
     @property
     def original_name(self):
         return self.name

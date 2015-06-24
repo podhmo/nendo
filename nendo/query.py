@@ -68,12 +68,21 @@ class Query(object):
                     raise MissingName(table.get_name())
 
     def _column_validation(self, context):
-        prop_name_set = set([p.original_name for p in self._from.props()])
+        prop_name_set = set([p.name for p in self._from.props()])
+        sprop_name_set = set([p.original_name for p in self._select.props()])
+        fprop_name_set = set([p.original_name for c in self._from.args for p in c.props()])
+        print("@@", prop_name_set, "@", sprop_name_set, "@@", fprop_name_set, "@@@")
+
         # select validation
         for p in self._select.props():
             if p.original_name not in prop_name_set:
-                raise ConflictName("{} is not found from FROM clause".format(p.original_name))
+                raise ConflictName("SELECT: {} is not found from FROM clause".format(p.name))
+
         # from validation (on)
+        for cond in self._from.args:
+            for p in cond.props():
+                if p.original_name not in prop_name_set:
+                    raise ConflictName("FROM: {} is not found from FROM clause".format(p.original_name))
 
     def validate(self, context):
         self._table_validation(context)
