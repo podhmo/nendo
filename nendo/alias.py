@@ -93,6 +93,9 @@ class QueryRecord(object):
     def __call__(self):
         return QueryBodyRecord(self.query, self._name, swapped=True)
 
+    def tables(self):
+        yield self
+
 
 class QueryBodyRecord(QueryRecord):
     """record like object but this is unfolded like a subquery"""

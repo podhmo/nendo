@@ -35,12 +35,11 @@ class SubSelect(Select):
 
 class From(Clause):
     def __getattr__(self, k):
-        for record in self.tables:
+        for record in self.tables():
             if record.get_name() == k:
                 return record
         raise AttributeError(k)
 
-    @property
     def tables(self):
         for record in self.args:
             yield from record.tables()
@@ -56,7 +55,6 @@ class Where(Clause):
                 cond = cond.__and__(e)
             self.args = [cond]
 
-    @property
     def tables(self):
         for cond in self.args:
             yield from cond.tables()

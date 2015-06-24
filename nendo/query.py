@@ -51,7 +51,7 @@ class Query(object):
 
     def validate(self, context):
         # from validation
-        table_name_list = [r.get_name() for r in self._from.tables]
+        table_name_list = [r.get_name() for r in self._from.tables()]
         table_name_set = set(table_name_list)
         if len(table_name_set) != len(table_name_list):
             raise ConflictName(", ".join(table_name_list))
@@ -61,7 +61,7 @@ class Query(object):
             if prop.record.get_name() not in table_name_set:
                 raise MissingName("{}.{}".format(prop.record.get_name(), prop.name))
         # where validation
-        for table in set(self._where.tables):
+        for table in set(self._where.tables()):
             if table.get_name() not in table_name_set:
                 if table.is_table():
                     raise MissingName(table.get_name())
