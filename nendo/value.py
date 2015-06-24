@@ -3,8 +3,8 @@ from .property import Property
 
 class Value(Property):
     """constant value"""
-    def __init__(self, value):
-        super().__init__()
+    def __init__(self, value, env=None):
+        super().__init__(env=env)
         self.value = value
 
     def __repr__(self):
@@ -21,7 +21,7 @@ class Prepared(Value):
     """using for prepared statement"""
     def __init__(self, value):
         self.value = value
-        super().__init__(env={value: self})
+        super().__init__(value, env={value: self})
 
     @property
     def key(self):

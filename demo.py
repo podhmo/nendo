@@ -43,3 +43,8 @@ pp(Query().from_(T.join(subq)).where(T.id >= 1, T.id <= 10).select(T.id, subq.G.
 # subq.nameをエラーにしたい
 # subqueryでselectに要素追加したい
 # 関数適用したい
+
+# 補完されて欲しい
+# a = alias(Query().from_(T).where(T.id == 1), "a")
+# b = alias(Query().from_(G).where(G.id == 1), "b")
+# pp(Query().from_(a.join(b)).select(a.T.id, b.G.id))

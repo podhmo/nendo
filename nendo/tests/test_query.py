@@ -28,6 +28,24 @@ class Tests(unittest.TestCase):
         expected = 'SELECT (0 = 0)'
         self.assertEqual(result, expected)
 
+    def test_select_prepared(self):
+        from nendo.value import Prepared
+        target = (self._makeQuery().select(Prepared("hello"), Prepared("world")))
+        context = {"hello": "foo", "world": "bar"}
+        result = self._callFUT(target, context)
+        expected = "SELECT %s, %s"
+        self.assertEqual(result, expected)
+        self.assertEqual(context["__i_args"], ["foo", "bar"])
+
+    def test_select_prepared__conflict(self):
+        from nendo.value import Prepared
+        target = (self._makeQuery().select(Prepared("hello"), Prepared("hello")))
+        context = {"hello": "foo"}
+        expected = "SELECT %s, %s"
+        result = self._callFUT(target, context)
+        self.assertEqual(result, expected)
+        self.assertEqual(context["__i_args"], ["foo", "foo"])
+
     def test_normally(self):
         T = self._makeRecord("T", "id, name")
         target = self._makeQuery().from_(T).where(T.id < 10).select(T.id, T.name).limit(1).order_by(T.id.desc())
@@ -111,6 +129,20 @@ class Tests(unittest.TestCase):
         result = self._callFUT(target, {})
         expected = "SELECT tb1.id, tb1.tb2_id, sub_q.tb2_id2 FROM tb1 JOIN (SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE (tb2.id = tb1.tb2_id)) as sub_q ON (sub_q.tb2_id2 >= tb1.id)"
         self.assertEqual(result, expected)
+
+    def test_subquery_as_record__prepared(self):
+        from nendo.alias import alias
+        from nendo.value import Prepared
+        tb1 = self._makeRecord("tb1", "id tb2_id")
+        tb2 = self._makeRecord("tb2", "id id2")
+        q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id, tb2.id <= Prepared("upper_bound")).select(tb2.id2)
+        sub_q = alias(q, "sub_q")
+        target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb2.id2))
+        context = {"sub_q.upper_bound": 20}
+        result = self._callFUT(target, context)
+        expected = "SELECT tb1.id, tb1.tb2_id, sub_q.tb2_id2 FROM tb1 JOIN (SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE ((tb2.id = tb1.tb2_id) AND (tb2.id <= %s))) as sub_q ON (sub_q.tb2_id2 >= tb1.id)"
+        self.assertEqual(result, expected)
+        self.assertEqual(context["__i_args"], [20])
 
     def test_subquery_as_record__conflict__at_select(self):
         from nendo.alias import alias
