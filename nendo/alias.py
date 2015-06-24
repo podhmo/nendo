@@ -6,24 +6,77 @@ from .query import Query
 from . import expr
 
 
+class AliasRecordProperty(ConcreteProperty):
+    def __init__(self, alias, prop, prefix=""):
+        name = "{}{}".format(prefix, prop.name)
+        super().__init__(alias, name, prop._key)
+        self.prop = prop
+
+
+class AliasExpressionProperty(ConcreteProperty):
+    def __init__(self, alias, prop, prefix=""):
+        name = "{}{}".format(prefix, prop.name)
+        super().__init__(alias, name, prop._key)
+        self.prop = prop
+
+
+class AliasProperty(ConcreteProperty):  # todo: cache via weak reference
+    def __init__(self, prop, name):
+        super().__init__(prop.record, name, prop._key)
+        self.prop = prop
+
+
+class AliasRecord(object):
+    PropertyFactory = AliasRecordProperty
+
+    def __init__(self, core, name, prefix="", parent=None):
+        self._name = name
+        self._core = core
+        self._prefix = prefix
+        self._parent = parent
+
+    def get_name(self):
+        return self._name
+
+    def is_table(self):
+        return True
+
+    def __getattr__(self, k):
+        value = getattr(self._core, k)
+        if isinstance(value, ConcreteProperty):
+            value = self.PropertyFactory(self, value, prefix=self._prefix)
+            setattr(self, k, value)
+        return value
+
+    def tables(self):
+        yield self
+
+
+class AliasExpressionRecord(AliasRecord):
+    PropertyFactory = AliasExpressionProperty
+
+    def is_table(self):
+        return False
+
+
 class QueryRecord(object):
     """record like object from query"""
-    def __init__(self, query, name):
-        self.query = query.swap(name)
+    RecordFactory = AliasRecord
+
+    def __init__(self, query, name, swapped=False):
+        self.query = query.swap(name) if not swapped else query
         self._name = name
 
     def __getattr__(self, k):
         value = getattr(self.query._from, k)
         if isinstance(value, RecordMeta):  # xxx:
-            value = AliasRecord(value, self._name, prefix="{}_".format(value.get_name()))
+            prefix = "{}_".format(value.get_name())
+            value = self.RecordFactory(value, self._name, prefix=prefix, parent=self)
             setattr(self, k, value)
         return value
 
     def get_name(self):
         return self._name
-
-    def tables(self):
-        yield self
 
     def join(self, other, *args):
         return expr.Join(self, other, args)
@@ -37,38 +90,13 @@ class QueryRecord(object):
     def cross_join(self, other, *args):
         return expr.CrossJoin(self, other, args)
 
-
-class AliasRecord(object):
-    def __init__(self, core, name, prefix=""):
-        self._name = name
-        self._core = core
-        self._prefix = prefix
-
-    def get_name(self):
-        return self._name
-
-    def __getattr__(self, k):
-        value = getattr(self._core, k)
-        if isinstance(value, ConcreteProperty):
-            value = AliasRecordProperty(self, value, prefix=self._prefix)
-            setattr(self, k, value)
-        return value
-
-    def tables(self):
-        yield self
+    def __call__(self):
+        return QueryBodyRecord(self.query, self._name, swapped=True)
 
 
-class AliasRecordProperty(ConcreteProperty):
-    def __init__(self, alias, prop, prefix=""):
-        name = "{}{}".format(prefix, prop.name)
-        super().__init__(alias, name, prop._key)
-        self.prop = prop
-
-
-class AliasProperty(ConcreteProperty):  # todo: cache via weak reference
-    def __init__(self, prop, name):
-        super().__init__(prop.record, name, prop._key)
-        self.prop = prop
+class QueryBodyRecord(QueryRecord):
+    """record like object but this is unfolded like a subquery"""
+    RecordFactory = AliasExpressionRecord
 
 
 @singledispatch

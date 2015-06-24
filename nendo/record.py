@@ -16,6 +16,14 @@ class Record(RecordBase):
         return getattr(cls, "_name", None) or cls.__name__
 
     @classmethod
+    def is_table(cls):
+        return True
+
+    @classmethod
+    def swap(cls, name):
+        return cls  # xxx
+
+    @classmethod
     def tables(cls):
         yield cls
 

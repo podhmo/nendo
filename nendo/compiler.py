@@ -5,7 +5,7 @@ from .clause import Clause, SubSelect
 from .expr import BOp, PreOp, PostOp, TriOp
 from .record import RecordMeta
 from .property import ConcreteProperty
-from .alias import AliasRecord, AliasProperty, QueryRecord
+from .alias import AliasRecord, AliasProperty, AliasExpressionProperty, QueryRecord
 from .value import Value
 
 
@@ -100,6 +100,12 @@ def on_property(prop, context):
 @compiler.register(AliasProperty)
 def on_alias_property(prop, context):
     return "{} as {}".format(compiler(prop.prop, context), prop.name)
+
+
+# xxx:
+@compiler.register(AliasExpressionProperty)
+def on_alias_expression_property(prop, context):
+    return "({})".format(compiler(prop.record._parent.query, context))
 
 
 @compiler.register(Value)

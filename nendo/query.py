@@ -63,4 +63,5 @@ class Query(object):
         # where validation
         for table in set(self._where.tables):
             if table.get_name() not in table_name_set:
-                raise MissingName(table.get_name())
+                if table.is_table():
+                    raise MissingName(table.get_name())
