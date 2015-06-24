@@ -18,33 +18,7 @@ class NamedProperty(object):
         return getattr(ob, self._key)
 
 
-class ConcreteProperty(Expr):
-    __slots__ = ("record", "_key")
-    infix = "."
-
-    def __init__(self, record, name, key):
-        self.record = record
-        self.name = name
-        self._key = key
-        super().__init__()
-
-    def tables(self):
-        yield self.record
-
-    def props(self):
-        yield self
-
-    @property
-    def original_name(self):
-        return self.name
-
-    @property
-    def projection_name(self):
-        return self.name
-
-    def __repr__(self):
-        return "<P: {}>".format(self.name)
-
+class Property(Expr):
     @lift
     def __add__(self, other):
         return expr.Add(self, other)
@@ -146,3 +120,30 @@ class ConcreteProperty(Expr):
 
     def desc(self):
         return expr.Desc(self)
+
+
+class ConcreteProperty(Property):
+    __slots__ = ("record", "_key")
+
+    @property
+    def original_name(self):
+        return self.name
+
+    @property
+    def projection_name(self):
+        return self.name
+
+    def __repr__(self):
+        return "<P: {}>".format(self.name)
+
+    def __init__(self, record, name, key):
+        self.record = record
+        self.name = name
+        self._key = key
+        super().__init__()
+
+    def tables(self):
+        yield self.record
+
+    def props(self):
+        yield self

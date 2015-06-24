@@ -1,7 +1,7 @@
-from .expr import Expr
+from .property import Property
 
 
-class Value(Expr):
+class Value(Property):
     """constant value"""
     def __init__(self, value):
         super().__init__()
@@ -11,6 +11,9 @@ class Value(Expr):
         return "<V: {}>".format(self.value)
 
     def tables(self):
+        return []
+
+    def props(self):
         return []
 
 

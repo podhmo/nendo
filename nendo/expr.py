@@ -1,19 +1,35 @@
 # -*- coding:utf-8 -*-
+from singledispatch import singledispatch
 from functools import wraps, partial
 from .langhelpers import reify
 from .env import Env
 
 
+@singledispatch
+def wrap(other):
+    return other
+
+
+@wrap.register(type(None))
+def wrap_on_none(value):
+    return value
+
+
+@wrap.register(tuple)
+@wrap.register(list)
+@wrap.register(bytes)
+@wrap.register(float)
+@wrap.register(int)
+@wrap.register(str)
+def wrap_on_plain_object(other):
+    from .value import Value
+    return Value(other)
+
+
 def lift(method):
     @wraps(method)
     def _lift(self, other):
-        if other is None:
-            value = method(self, None)
-        elif not isinstance(other, Expr):
-            from .value import Value
-            value = method(self, Value(other))
-        else:
-            value = method(self, other)
+        value = method(self, wrap(other))
         value.env.merge(self, other)  # side effect
         return value
     return _lift
@@ -59,7 +75,7 @@ class UOp(Expr):
         yield from self.value.tables()
 
     def props(self):
-        yield from self.value
+        yield from self.value.props()
 
     def __repr__(self):
         return "<U: {} {} {}>".format(self.op, self.value)

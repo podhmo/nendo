@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from .env import Env
+from .expr import wrap
 from .property import ConcreteProperty
 
 
@@ -11,7 +12,7 @@ class Clause(object):
         return self.__class__(*self.args, env=self.env.make())
 
     def __init__(self, *args, env=None):
-        self.args = list(args)
+        self.args = [wrap(e) for e in args]
         self.env = env or Env()
 
     def is_empty(self):
@@ -26,7 +27,8 @@ class Select(Clause):
         raise AttributeError(k)
 
     def props(self):
-        return self.args
+        for e in self.args:
+            yield from e.props()
 
     def swap(self, query, name):
         return SubSelect(*[_SubSelectProperty(query, e) for e in self.args])

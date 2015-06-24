@@ -15,6 +15,19 @@ class Tests(unittest.TestCase):
         from nendo.query import Query
         return Query()
 
+    def test_select__constant(self):
+        target = (self._makeQuery().select(1))
+        result = self._callFUT(target, {})
+        expected = 'SELECT 1'
+        self.assertEqual(result, expected)
+
+    def test_select__constant__expr(self):
+        from nendo.value import Value
+        target = (self._makeQuery().select(Value(0) == Value(0)))
+        result = self._callFUT(target, {})
+        expected = 'SELECT (0 = 0)'
+        self.assertEqual(result, expected)
+
     def test_join(self):
         T1 = self._makeRecord("T1", "id")
         T2 = self._makeRecord("T2", "id t1_id")
