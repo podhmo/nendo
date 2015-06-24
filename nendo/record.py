@@ -66,3 +66,8 @@ def make_record(m, clsname, template, name=None):
 
         if name is not None:
             m.stmt("_name = {!r}".format(name))
+
+        m.stmt("_property_name_list = {!r}".format(attrs))
+        m.stmt("@property")
+        with m.method("props"):
+            m.return_("[getattr(self, p) for p in self._property_name_list]")

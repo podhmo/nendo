@@ -86,6 +86,18 @@ class Tests(unittest.TestCase):
         tb1 = self._makeRecord("tb1", "id tb2_id")
         q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
         sub_q = alias(q, "sub_q")
+        target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb2.id2))
+        result = self._callFUT(target, {})
+        expected = "SELECT * FROM tb1 JOIN (SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE (tb2.id = tb1.tb2_id)) as sub_q ON (sub_q.tb2_id2 >= tb1.id)"
+        self.assertEqual(result, expected)
+
+    @unittest.skip("hmm")
+    def test_subquery_as_record__conflict(self):
+        from nendo.alias import alias
+        tb2 = self._makeRecord("tb2", "id id2")
+        tb1 = self._makeRecord("tb1", "id tb2_id")
+        q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
+        sub_q = alias(q, "sub_q")
         target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb1.id))
         result = self._callFUT(target, {})
         print(result)
@@ -100,4 +112,3 @@ class Tests(unittest.TestCase):
         result = self._callFUT(target, {})
         expected = "SELECT tb1.id FROM tb1 WHERE ((SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE (tb2.id = tb1.tb2_id)) = tb1.tb2_id)"
         self.assertEqual(result, expected)
-
