@@ -12,7 +12,7 @@ from nendo import Query, make_record, render
 from nendo.value import NULL
 from datetime import date
 
-Employee = make_record("Employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
+Employee = make_record("employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
 query = (Query()
          .from_(Employee)
          .where((Employee.end_date.is_(NULL))

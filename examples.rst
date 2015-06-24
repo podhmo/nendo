@@ -59,7 +59,7 @@ examples/03.py
   from nendo.value import NULL
   from datetime import date
   
-  Employee = make_record("Employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
+  Employee = make_record("employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
   query = (Query()
            .from_(Employee)
            .where((Employee.end_date.is_(NULL))
@@ -69,5 +69,5 @@ examples/03.py
 
 .. code-block:: sql
 
-  ("SELECT Employee.emp_id, Employee.fname, Employee.lname, Employee.start_date, Employee.end_date, Employee.superior_emp_id, Employee.dept_id, Employee.title, Employee.assigned_branch_id FROM Employee WHERE (((Employee.end_date IS NULL) AND (Employee.title = 'Teller')) OR (Employee.start_date < '2003-01-01'))", [])
+  ("SELECT employee.emp_id, employee.fname, employee.lname, employee.start_date, employee.end_date, employee.superior_emp_id, employee.dept_id, employee.title, employee.assigned_branch_id FROM employee WHERE (((employee.end_date IS NULL) AND (employee.title = 'Teller')) OR (employee.start_date < '2003-01-01'))", [])
 
