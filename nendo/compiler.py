@@ -21,10 +21,11 @@ def on_query(query, context, force=False):
 
     r = []
     if query._select.is_empty():
-        r.append("SELECT *")
-        # r.append("SELECT")
-        # for p in query.props():
-        #     r.append(compiler(p, context, force=force))
+        r.append("SELECT")
+        columns = []
+        for p in query.props():
+            columns.append(compiler(p, context, force=force))
+        r.append(", ".join(columns))
     else:
         r.append(compiler(query._select, context, force=force))
     if not query._from.is_empty():

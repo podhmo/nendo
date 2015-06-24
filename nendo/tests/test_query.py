@@ -33,28 +33,28 @@ class Tests(unittest.TestCase):
         T = self._makeRecord("T", "id pt")
         target = self._makeQuery().from_(T).where(~(T.pt == 3))
         result = self._callFUT(target, {})
-        expected = "SELECT * FROM T WHERE (NOT (T.pt = 3))"
+        expected = "SELECT T.id, T.pt FROM T WHERE (NOT (T.pt = 3))"
         self.assertEqual(result, expected)
 
     def test_bop(self):
         T = self._makeRecord("T", "id pt")
         target = self._makeQuery().from_(T).where(T.pt != 3)
         result = self._callFUT(target, {})
-        expected = "SELECT * FROM T WHERE (T.pt <> 3)"
+        expected = "SELECT T.id, T.pt FROM T WHERE (T.pt <> 3)"
         self.assertEqual(result, expected)
 
     def test_in(self):
         T = self._makeRecord("T", "id pt")
         target = self._makeQuery().from_(T).where(T.pt.in_(["3", "4", "5"]))
         result = self._callFUT(target, {})
-        expected = "SELECT * FROM T WHERE (T.pt IN ('3', '4', '5'))"
+        expected = "SELECT T.id, T.pt FROM T WHERE (T.pt IN ('3', '4', '5'))"
         self.assertEqual(result, expected)
 
     def test_between(self):
         T = self._makeRecord("T", "id, l, r")
         target = self._makeQuery().from_(T).where(T.l.between(T.r))
         result = self._callFUT(target, {})
-        expected = "SELECT * FROM T WHERE (T.l BETWEEN T.r)"
+        expected = "SELECT T.id, T.l, T.r FROM T WHERE (T.l BETWEEN T.r)"
         self.assertEqual(result, expected)
 
     def test_alias_column(self):
@@ -89,7 +89,7 @@ class Tests(unittest.TestCase):
         sub_q = alias(q, "sub_q")
         target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb2.id2))
         result = self._callFUT(target, {})
-        expected = "SELECT * FROM tb1 JOIN (SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE (tb2.id = tb1.tb2_id)) as sub_q ON (sub_q.tb2_id2 >= tb1.id)"
+        expected = "SELECT tb1.id, tb1.tb2_id, sub_q.tb2_id2 FROM tb1 JOIN (SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE (tb2.id = tb1.tb2_id)) as sub_q ON (sub_q.tb2_id2 >= tb1.id)"
         self.assertEqual(result, expected)
 
     def test_subquery_as_record__conflict__at_select(self):

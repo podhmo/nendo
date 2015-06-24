@@ -104,7 +104,9 @@ class QueryRecord(object):
         yield self
 
     def props(self):
-        yield from self.query.props()
+        for prop in self.query.props():
+            record = getattr(self, prop.record.get_name())
+            yield getattr(record, prop.original_name)
 
 
 class QueryBodyRecord(QueryRecord):

@@ -39,8 +39,8 @@ class SubSelect(Select):
 class _SubSelectProperty(ConcreteProperty):
     def __init__(self, query, prop):
         super().__init__(prop.record, prop.name, prop._key)
-        self.query = query
         self.prop = prop
+        self.query = query
 
     @property
     def projection_name(self):
