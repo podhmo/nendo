@@ -24,7 +24,6 @@ class Select(Clause):
                 return e
         raise AttributeError(k)
 
-    @property
     def props(self):
         return self.args
 
@@ -43,6 +42,10 @@ class From(Clause):
     def tables(self):
         for record in self.args:
             yield from record.tables()
+
+    def props(self):
+        for t in self.tables():
+            yield from t.props()
 
 
 class Where(Clause):

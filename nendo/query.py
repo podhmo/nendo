@@ -49,15 +49,16 @@ class Query(object):
     def having(self, *args):
         return self.make(having=Having(*chain(self._having.args, args)))
 
-    def validate(self, context):
+    def _table_validation(self, context):
         # from validation
-        table_name_list = [r.get_name() for r in self._from.tables()]
+        tables = list(self._from.tables())
+        table_name_list = [r.get_name() for r in tables]
         table_name_set = set(table_name_list)
         if len(table_name_set) != len(table_name_list):
             raise ConflictName(", ".join(table_name_list))
 
         # select validation
-        for prop in self._select.props:
+        for prop in self._select.props():
             if prop.record.get_name() not in table_name_set:
                 raise MissingName("{}.{}".format(prop.record.get_name(), prop.name))
         # where validation
@@ -65,3 +66,18 @@ class Query(object):
             if table.get_name() not in table_name_set:
                 if table.is_table():
                     raise MissingName(table.get_name())
+
+    def _column_validation(self, context):
+        prop_name_set = set([p.original_name for p in self._from.props()])
+        # select validation
+        for p in self._select.props():
+            if p.original_name not in prop_name_set:
+                raise ConflictName("{} is not found from FROM clause".format(p.original_name))
+        # from validation (on)
+
+    def validate(self, context):
+        self._table_validation(context)
+        self._column_validation(context)
+
+    def props(self):
+        return list(self._select.props()) or list(self._from.props())

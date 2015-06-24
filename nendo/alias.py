@@ -12,6 +12,10 @@ class AliasRecordProperty(ConcreteProperty):
         super().__init__(alias, name, prop._key)
         self.prop = prop
 
+    @property
+    def original_name(self):
+        return self.name
+
 
 class AliasExpressionProperty(ConcreteProperty):
     def __init__(self, alias, prop, prefix=""):
@@ -19,11 +23,19 @@ class AliasExpressionProperty(ConcreteProperty):
         super().__init__(alias, name, prop._key)
         self.prop = prop
 
+    @property
+    def original_name(self):
+        return self.name
+
 
 class AliasProperty(ConcreteProperty):  # todo: cache via weak reference
     def __init__(self, prop, name):
         super().__init__(prop.record, name, prop._key)
         self.prop = prop
+
+    @property
+    def original_name(self):
+        return self.prop.name
 
 
 class AliasRecord(object):
@@ -50,6 +62,9 @@ class AliasRecord(object):
 
     def tables(self):
         yield self
+
+    def props(self):
+        return [getattr(self, p.name) for p in self._core.props()]
 
 
 class AliasExpressionRecord(AliasRecord):

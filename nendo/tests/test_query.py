@@ -68,7 +68,8 @@ class Tests(unittest.TestCase):
     def test_alias_table(self):
         from nendo.alias import alias
         T = self._makeRecord("T", "id")
-        target = self._makeQuery().from_(alias(T, "t")).select(alias(T, "t").id)
+        t = alias(T, "t")
+        target = self._makeQuery().from_(t).select(t.id)
         result = self._callFUT(target, {})
         expected = "SELECT t.id FROM T as t"
         self.assertEqual(result, expected)
@@ -91,16 +92,26 @@ class Tests(unittest.TestCase):
         expected = "SELECT * FROM tb1 JOIN (SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE (tb2.id = tb1.tb2_id)) as sub_q ON (sub_q.tb2_id2 >= tb1.id)"
         self.assertEqual(result, expected)
 
-    @unittest.skip("hmm")
-    def test_subquery_as_record__conflict(self):
+    def test_subquery_as_record__conflict__at_select(self):
         from nendo.alias import alias
+        from nendo.exceptions import ConflictName
         tb2 = self._makeRecord("tb2", "id id2")
         tb1 = self._makeRecord("tb1", "id tb2_id")
         q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
         sub_q = alias(q, "sub_q")
-        target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb1.id))
-        result = self._callFUT(target, {})
-        print(result)
+        target = self._makeQuery().from_(tb1.join(sub_q)).select(sub_q.tb1.id)
+        with self.assertRaises(ConflictName):
+            self._callFUT(target, {})
+
+    # def test_subquery_as_record__conflict__at_join(self):
+    #     from nendo.alias import alias
+    #     tb2 = self._makeRecord("tb2", "id id2")
+    #     tb1 = self._makeRecord("tb1", "id tb2_id")
+    #     q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
+    #     sub_q = alias(q, "sub_q")
+    #     target = self._makeQuery().from_(tb1.join(sub_q, tb1.id <= sub_q.tb1.id))
+    #     result = self._callFUT(target, {})
+    #     print(result)
 
     def test_subquery_as_column(self):
         from nendo.alias import alias
