@@ -1,8 +1,8 @@
 from nendo import make_record, Query, alias
 from nendo.query import ConflictName, MissingName
 from nendo.compiler import compiler
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 T = make_record("T", "id name")

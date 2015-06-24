@@ -3,6 +3,7 @@ from singledispatch import singledispatch
 from functools import wraps, partial
 from .langhelpers import reify
 from .env import Env
+from datetime import date, datetime
 
 
 @singledispatch
@@ -15,6 +16,8 @@ def wrap_on_none(value):
     return value
 
 
+@wrap.register(date)
+@wrap.register(datetime)
 @wrap.register(tuple)
 @wrap.register(list)
 @wrap.register(bytes)

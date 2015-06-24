@@ -1,12 +1,13 @@
 # -*- coding:utf-8 -*-
 from singledispatch import singledispatch
+from datetime import date, datetime, time
 from .query import Query
 from .clause import Clause, SubSelect
-from .expr import BOp, PreOp, PostOp, TriOp
+from .expr import BOp, PreOp, PostOp, TriOp, Expr
 from .record import RecordMeta
 from .property import ConcreteProperty
 from .alias import AliasRecord, AliasProperty, AliasExpressionProperty, QueryRecord
-from .value import Value, Prepared
+from .value import Value, Prepared, List, Constant
 
 
 ARGS = "__i_args"  # xxx: this is the keyname of stored arguments
@@ -135,6 +136,23 @@ def on_prepared(v, context, path=None):
         return "%s"
 
 
+@compiler.register(List)  # list is not python's list
+def on_list(v, context, path=None):
+    v = v.value
+    r = []
+    for e in v:
+        if isinstance(e, Expr):
+            r.append(compiler(e, context, path=path))
+        else:
+            r.append(compiler(Value(e), context, path=path))
+    return ", ".join(r)
+
+
+@compiler.register(Constant)
+def on_constant(v, context, path=None):
+    return v.expr or v.value
+
+
 @compiler.register(Value)
 def on_value(v, context, path=None):
     v = v.value
@@ -143,7 +161,7 @@ def on_value(v, context, path=None):
     elif isinstance(v, (list, tuple)):
         r = []
         for e in v:
-            if isinstance(e, Value):
+            if isinstance(e, Expr):
                 r.append(compiler(e, context, path=path))
             else:
                 r.append(compiler(Value(e), context, path=path))
@@ -153,5 +171,24 @@ def on_value(v, context, path=None):
     elif isinstance(v, bool):
         return "{}".format(int(v))
     else:
-        return str(v)
-    raise NotImplementedError(v)
+        return convert(v)
+
+
+@singledispatch
+def convert(v):
+    return str(v)
+
+
+@convert.register(date)
+def on_date(v):
+    return v.strftime("'%Y-%m-%d'")
+
+
+@convert.register(datetime)
+def on_datetime(v):
+    return v.strftime("'%Y-%m-%d %H:%M:%S'")
+
+
+@convert.register(time)
+def on_time(v):
+    return v.strftime("'%H:%M:%S'")

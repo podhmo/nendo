@@ -1,6 +1,18 @@
 from .property import Property
 
 
+class Constant(object):
+    def __init__(self, value, expr=None):
+        self.value = value
+        self.expr = expr
+
+    def tables(self):
+        return []
+
+    def props(self):
+        return []
+
+
 class Value(Property):
     """constant value"""
     def __init__(self, value, env=None):
@@ -17,6 +29,10 @@ class Value(Property):
         return []
 
 
+class List(Value):
+    pass
+
+
 class Prepared(Value):
     """using for prepared statement"""
     def __init__(self, value):
@@ -29,3 +45,6 @@ class Prepared(Value):
 
     def __repr__(self):
         return "<pV: {}>".format(self.value)
+
+
+NULL = Constant("NULL")
