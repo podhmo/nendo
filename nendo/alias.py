@@ -31,7 +31,21 @@ class AliasProperty(ConcreteProperty):  # todo: cache via weak reference
         return self.prop.name
 
 
-class AliasRecord(object):
+class _Joinable(object):
+    def join(self, other, *args):
+        return expr.Join(self, other, args)
+
+    def left_outer_join(self, other, *args):
+        return expr.LeftOuterJoin(self, other, args)
+
+    def right_outer_join(self, other, *args):
+        return expr.RightOuterJoin(self, other, args)
+
+    def cross_join(self, other, *args):
+        return expr.CrossJoin(self, other, args)
+
+
+class AliasRecord(_Joinable):
     PropertyFactory = AliasRecordProperty
 
     def __init__(self, core, name, prefix="", parent=None):
@@ -67,7 +81,7 @@ class AliasExpressionRecord(AliasRecord):
         return False
 
 
-class QueryRecord(object):
+class QueryRecord(_Joinable):
     """record like object from query"""
     RecordFactory = AliasRecord
 
@@ -88,18 +102,6 @@ class QueryRecord(object):
 
     def get_name(self):
         return self._name
-
-    def join(self, other, *args):
-        return expr.Join(self, other, args)
-
-    def left_outer_join(self, other, *args):
-        return expr.LeftOuterJoin(self, other, args)
-
-    def right_outer_join(self, other, *args):
-        return expr.RightOuterJoin(self, other, args)
-
-    def cross_join(self, other, *args):
-        return expr.CrossJoin(self, other, args)
 
     def __call__(self):
         return QueryBodyRecord(self.query, self._name, swapped=True)
