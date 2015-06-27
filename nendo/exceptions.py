@@ -9,3 +9,7 @@ class ConflictName(ValidationError):
 
 class MissingName(ValidationError):
     pass
+
+
+class InvalidCombination(ValidationError):
+    pass

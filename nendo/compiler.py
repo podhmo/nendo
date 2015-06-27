@@ -12,7 +12,7 @@ from .options import Options
 
 
 ARGS = "__i_args"  # xxx: this is the keyname of stored arguments
-DEFAULT_OPTIONS = Options(use_validation=True, one_table=False)
+DEFAULT_OPTIONS = Options(use_validation=True, one_table=False, one_line_sql=True)
 
 
 @singledispatch
@@ -49,7 +49,11 @@ def on_query(query, context, options=None, path=None):
         r.append(compiler(query._having, context, options=options, path=path))
     if not query._limit.is_empty():
         r.append(compiler(query._limit, context, options=options, path=path))
-    return " ".join(r)
+
+    if options.one_line_sql:
+        return " ".join(r)
+    else:
+        return "\n".join(r)
 
 
 @compiler.register(Clause)

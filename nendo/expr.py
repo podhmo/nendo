@@ -1,14 +1,20 @@
 # -*- coding:utf-8 -*-
 from singledispatch import singledispatch
 from functools import wraps, partial
+from datetime import date, datetime
 from .langhelpers import reify
 from .env import Env
-from datetime import date, datetime
+from .exceptions import InvalidCombination
 
 
 @singledispatch
 def wrap(other):
     return other
+
+
+@wrap.register(bool)
+def wrap_on_bool(value):
+    raise InvalidCombination(value)
 
 
 @wrap.register(type(None))
