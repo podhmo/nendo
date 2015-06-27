@@ -2,7 +2,7 @@
 from singledispatch import singledispatch
 from datetime import date, datetime, time
 from .query import Query, _QueryFrom, _QueryProperty
-from .clause import Clause, _SubSelectProperty
+from .clause import Clause, _SubSelectProperty, Select
 from .expr import BOp, PreOp, PostOp, TriOp, JoinOp, Expr
 from .record import RecordMeta
 from .property import ConcreteProperty
@@ -63,15 +63,17 @@ def on_query(query, context, options=None, path=None):
 
 @compiler.register(Clause)
 def on_clause(clause, context, options=None, path=None):
-    return "{} {}".format(clause.get_name(), ", ".join(compiler(e, context, options=options, path=path) for e in clause.args))
+    name = "{} {}".format(clause.get_name(), clause.suffix) if clause.suffix else clause.get_name()
+    return "{} {}".format(name, ", ".join(compiler(e, context, options=options, path=path) for e in clause.args))
 
 
 @compiler.register(_QueryFrom)
-def on_union_from(clause, context, options=None, path=None):
+def on_union_from(select, context, options=None, path=None):
     r = []
-    for e in clause.args:
+    for e in select.args:
         r.append("{}".format(compiler(e, context, options=options, path=path)))
-    return "{} ({}) as {}".format(clause.get_name(), " {} ".format(clause.separator).join(r), clause.args[0].get_name())
+    name = "{} {}".format(select.get_name(), select.suffix) if select.suffix else select.get_name()
+    return "{} ({}) as {}".format(name, " {} ".format(select.separator).join(r), select.args[0].get_name())
 
 
 @compiler.register(BOp)

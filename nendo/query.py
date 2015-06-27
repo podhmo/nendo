@@ -89,11 +89,12 @@ class Query(object):
             from_=self._from.swap(self, name)
         )
 
-    def select(self, *args, replace=False):
+    def select(self, *args, replace=False, distinct=False):
+        suffix = "DISTINCT" if distinct else ""
         if replace:
-            return self.make(select=Select(*args))
+            return self.make(select=Select(*args, suffix=suffix))
         else:
-            return self.make(select=Select(*chain(self._select.args, args)))
+            return self.make(select=Select(*chain(self._select.args, args), suffix=suffix))
 
     def where(self, *args, replace=False):
         if replace:

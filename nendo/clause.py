@@ -6,24 +6,25 @@ from .value import Function, Constant
 
 
 class Clause(object):
-    __slots__ = ("args", "env")
+    __slots__ = ("args", "env", "suffix")
 
-    def __init__(self, *args, env=None):
+    def __init__(self, *args, env=None, suffix=""):
         self.args = [wrap(e) for e in args]
         self.env = env or Env()
+        self.suffix = suffix
 
     def get_name(self):
         return getattr(self, "_name", None) or self.__class__.__name__.upper()
 
     def make(self, *args):
-        return self.__class__(*self.args, env=self.env.make())
+        return self.__class__(*self.args, env=self.env.make(), suffix=self.suffix)
 
     def is_empty(self):
         return not bool(self.args)
 
 
 class Select(Clause):
-    __slots__ = ("args", "env")
+    __slots__ = ("args", "env", "suffix")
 
     def __getattr__(self, k):
         for e in self.args:
@@ -62,7 +63,7 @@ class _SubSelectProperty(ConcreteProperty):
 
 
 class From(Clause):
-    __slots__ = ("args", "env")
+    __slots__ = ("args", "env", "suffix")
 
     def __getattr__(self, k):
         for record in self.tables():
@@ -83,10 +84,10 @@ class From(Clause):
 
 
 class Where(Clause):
-    __slots__ = ("args", "env")
+    __slots__ = ("args", "env", "suffix")
 
-    def __init__(self, *args, env=None):
-        super().__init__(*args, env=env)
+    def __init__(self, *args, env=None, suffix=""):
+        super().__init__(*args, env=env, suffix=suffix)
         if len(self.args) > 1:
             # where(<cond>, <cond>) == where(<cond> and <cond>)
             cond = self.args[0]
@@ -108,10 +109,10 @@ class GroupBy(Clause):
 
 
 class Having(Clause):
-    __slots__ = ("args", "env")
+    __slots__ = ("args", "env", "suffix")
 
-    def __init__(self, *args, env=None):
-        super().__init__(*args, env=env)
+    def __init__(self, *args, env=None, suffix=""):
+        super().__init__(*args, env=env, suffix=suffix)
         if len(self.args) > 1:
             # where(<cond>, <cond>) == where(<cond> and <cond>)
             cond = self.args[0]
