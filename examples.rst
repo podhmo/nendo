@@ -15,9 +15,11 @@ examples/01.py
   query = Query().from_(Account).order_by(Account.avail_balance.desc())
   print(render(query))
 
+result:
+
 .. code-block:: sql
 
-  ('SELECT account.account_id, account.product_cd, account.open_date, account.avail_balance FROM account ORDER BY account.avail_balance DESC', [])
+  ('SELECT account_id, product_cd, open_date, avail_balance FROM account ORDER BY avail_balance DESC', [])
 
 examples/02.py
 
@@ -40,9 +42,11 @@ examples/02.py
            .select(Account.open_emp_id, Account.product_cd))
   print(render(query))
 
+result:
+
 .. code-block:: sql
 
-  ('SELECT account.open_emp_id, account.product_cd FROM account ORDER BY account.open_emp_id, account.product_cd DESC', [])
+  ('SELECT open_emp_id, product_cd FROM account ORDER BY open_emp_id, product_cd DESC', [])
 
 examples/03.py
 
@@ -67,9 +71,11 @@ examples/03.py
                   | (Employee.start_date < date(2003, 1, 1))))
   print(render(query))
 
+result:
+
 .. code-block:: sql
 
-  ("SELECT employee.emp_id, employee.fname, employee.lname, employee.start_date, employee.end_date, employee.superior_emp_id, employee.dept_id, employee.title, employee.assigned_branch_id FROM employee WHERE (((employee.end_date IS NULL) AND (employee.title = 'Teller')) OR (employee.start_date < '2003-01-01'))", [])
+  ("SELECT emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id FROM employee WHERE (((end_date IS NULL) AND (title = 'Teller')) OR (start_date < '2003-01-01'))", [])
 
 examples/04.py
 
@@ -92,9 +98,11 @@ examples/04.py
            .where((e.start_date.between(date(2001, 1, 1), date(2002, 12, 31)))))
   print(render(query))
 
+result:
+
 .. code-block:: sql
 
-  ("SELECT e.emp_id, e.fname, e.lname, e.start_date, e.end_date, e.superior_emp_id, e.dept_id, e.title, e.assigned_branch_id FROM employee as e WHERE (e.start_date BETWEEN '2001-01-01' AND '2002-12-31')", [])
+  ("SELECT emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id FROM employee as e WHERE (start_date BETWEEN '2001-01-01' AND '2002-12-31')", [])
 
 examples/05.py
 
@@ -117,9 +125,11 @@ examples/05.py
            .where((e.start_date.between(date(2001, 1, 1), date(2002, 12, 31)))))
   print(render(query))
 
+result:
+
 .. code-block:: sql
 
-  ("SELECT e.emp_id, e.fname, e.lname, e.start_date, e.end_date, e.superior_emp_id, e.dept_id, e.title, e.assigned_branch_id FROM employee as e WHERE (e.start_date BETWEEN '2001-01-01' AND '2002-12-31')", [])
+  ("SELECT emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id FROM employee as e WHERE (start_date BETWEEN '2001-01-01' AND '2002-12-31')", [])
 
 examples/06.py
 
@@ -146,7 +156,189 @@ examples/06.py
   
   print(render(query, start_date="2000-01-01"))
 
+result:
+
 .. code-block:: sql
 
-  ('SELECT e.emp_id, e.fname, e.lname, e.start_date, e.end_date, e.superior_emp_id, e.dept_id, e.title, e.assigned_branch_id FROM employee as e WHERE ((e.start_date >= %s) AND (e.start_date <= %s))', ['2000-01-01', '2000-01-01'])
+  ('SELECT emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id FROM employee as e WHERE ((start_date >= %s) AND (start_date <= %s))', ['2000-01-01', '2000-01-01'])
+
+examples/07.py
+
+.. code-block:: python
+
+  
+  """
+  SELECT account_id, product_cd, cust_id, avail_balance
+  FROM account
+  WHERE product_cd IN ('CHK', 'SAV', 'CD', 'MM');
+  """
+  
+  from nendo import Query, make_record, render
+  
+  Account = make_record("account", "account_id product_cd open_date avail_balance")
+  query = (Query()
+           .from_(Account)
+           .where(Account.product_cd.in_(["CHK", "SAV", "CD", "MM"])))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ("SELECT account_id, product_cd, open_date, avail_balance FROM account WHERE (product_cd IN ('CHK', 'SAV', 'CD', 'MM'))", [])
+
+examples/08.py
+
+.. code-block:: python
+
+  
+  """
+  SELECT account_id, product_cd, cust_id, avail_balance
+  FROM account
+  WHERE account_id = (SELECT MAX(account_id)
+                      FROM account);
+  """
+  
+  from nendo import Query, make_record, render, subquery
+  from nendo.value import fn
+  
+  Account = make_record("account", "account_id product_cd open_date avail_balance")
+  subq = (Query().from_(Account).select(fn.count(Account.account_id)))
+  query = (Query()
+           .from_(Account)
+           .where(Account.account_id == subquery(subq)))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ('SELECT account_id, product_cd, open_date, avail_balance FROM account WHERE (account_id = (SELECT count(account_id) FROM account))', [])
+
+examples/09.py
+
+.. code-block:: python
+
+  
+  """
+  SELECT account_id, product_cd, cust_id, avail_balance
+  FROM account
+  WHERE product_cd IN (SELECT product_cd
+                       FROM product
+                       WHERE product_type_cd = 'ACCOUNT');
+  """
+  
+  from nendo import Query, make_record, render, subquery
+  
+  Account = make_record("account", "account_id product_cd open_date avail_balance cust_id")
+  Product = make_record("product", "product_id product_cd product_type_cd")
+  subq = (Query()
+          .from_(Product)
+          .where(Product.product_type_cd == "ACCOUNT")
+          .select(Product.product_cd))
+  query = (Query()
+           .from_(Account)
+           .where(Account.product_cd.in_(subquery(subq)))
+           .select(Account.account_id, Account.product_cd, Account.cust_id, Account.avail_balance))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ("SELECT account_id, product_cd, cust_id, avail_balance FROM account WHERE (product_cd IN (SELECT product_cd as product_product_cd FROM product WHERE (product_type_cd = 'ACCOUNT')))", [])
+
+examples/10.py
+
+.. code-block:: python
+
+  
+  """
+  SELECT e.fname, e.lname, d.name
+  FROM employee e INNER JOIN department d
+  USING (dept_id);
+  """
+  
+  from nendo import Query, make_record, render
+  
+  Department = make_record("department", "dept_id, name")
+  Employee = make_record("employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
+  query = (Query()
+           .from_(Employee.join(Department, Employee.dept_id == Department.dept_id))
+           .select(Employee.fname, Employee.lname, Department.name))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ('SELECT employee.fname, employee.lname, department.name FROM employee JOIN department ON (employee.dept_id = department.dept_id)', [])
+
+examples/11.py
+
+.. code-block:: python
+
+  
+  """
+  SELECT a.account_id, a.cust_id, a.open_date, a.product_cd
+  FROM account a INNER JOIN employee e ON a.open_emp_id = e.emp_id
+  INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
+  WHERE e.start_date <= date('2004-01-01') AND
+       (e.title = 'Teller' OR e.title = 'Head Teller') AND
+       b.name = 'Woburn Branch';
+  """
+  
+  from nendo import Query, make_record, render, alias
+  from datetime import date
+  
+  Account = make_record("account", "account_id, product_cd, open_date, avail_balance, open_emp_id, cust_id")
+  Employee = make_record("employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
+  Branch = make_record("branch", "branch_id, name")
+  
+  a = alias(Account, "a")
+  e = alias(Employee, "e")
+  b = alias(Branch, "b")
+  query = (Query()
+           .from_(a.join(e, a.open_emp_id == e.emp_id).join(b, e.assigned_branch_id == b.branch_id))
+           .where(e.start_date <= date(2004, 1, 1),
+                  ((e.title == 'teller') | (e.title == 'Head Teller')),
+                  b.name == "Woburn Branch")
+           .select(a.account_id, a.cust_id, a.open_date, a.product_cd))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ("SELECT a.account_id, a.cust_id, a.open_date, a.product_cd FROM account as a JOIN employee as e ON (a.open_emp_id = e.emp_id) JOIN branch as b ON (e.assigned_branch_id = b.branch_id) WHERE (((e.start_date <= '2004-01-01') AND ((e.title = 'teller') OR (e.title = 'Head Teller'))) AND (b.name = 'Woburn Branch'))", [])
+
+examples/12.py
+
+.. code-block:: python
+
+  
+  """
+  SELECT e.fname, e.lname, e_mgr.fname mgr_fname, e_mgr.lname mgr_lname
+  FROM employee e INNER JOIN employee e_mgr
+  ON e.superior_emp_id = e_mgr.emp_id
+  """
+  
+  from nendo import Query, make_record, render, alias
+  from datetime import date
+  
+  Employee = make_record("employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
+  e = alias(Employee, "e")
+  e_mgr = alias(Employee, "e_mgr")
+  
+  query = (Query()
+           .from_(e.join(e_mgr))
+           .where(e.superior_emp_id == e_mgr.emp_id)
+           .select(e.fname, e.lname, alias(e_mgr.fname, "mgr_fname"), alias(e_mgr.lname, "mgr_lname")))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ('SELECT e.fname, e.lname, e_mgr.fname as mgr_fname, e_mgr.lname as mgr_lname FROM employee as e JOIN employee as e_mgr WHERE (e.superior_emp_id = e_mgr.emp_id)', [])
 
