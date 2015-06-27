@@ -10,7 +10,7 @@ from nendo.options import Options
 
 def render(query, **context):
     options = Options(use_validation=True,
-                      one_table=len(query.tables()) <= 1,
+                      one_table=len(list(query.tables())) <= 1,
                       one_line_sql=True)
     sql = compiler(query, context, options=options)
     return (sql, context[ARGS])

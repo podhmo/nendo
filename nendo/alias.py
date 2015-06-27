@@ -28,7 +28,7 @@ class AliasProperty(ConcreteProperty):  # todo: cache via weak reference
 
     @property
     def original_name(self):
-        return self.prop.name
+        return self.prop.original_name
 
 
 class _Joinable(object):
@@ -102,6 +102,9 @@ class QueryRecord(_Joinable):
 
     def get_name(self):
         return self._name
+
+    def union(self, other, *args):
+        return self.__class__(self.query.union(other), self._name, swapped=True)
 
     def __call__(self):
         return QueryBodyRecord(self.query, self._name, swapped=True)

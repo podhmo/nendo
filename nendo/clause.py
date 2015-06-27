@@ -6,21 +6,25 @@ from .value import Function, Constant
 
 
 class Clause(object):
+    __slots__ = ("args", "env")
+
+    def __init__(self, *args, env=None):
+        self.args = [wrap(e) for e in args]
+        self.env = env or Env()
+
     def get_name(self):
         return getattr(self, "_name", None) or self.__class__.__name__.upper()
 
     def make(self, *args):
         return self.__class__(*self.args, env=self.env.make())
 
-    def __init__(self, *args, env=None):
-        self.args = [wrap(e) for e in args]
-        self.env = env or Env()
-
     def is_empty(self):
         return not bool(self.args)
 
 
 class Select(Clause):
+    __slots__ = ("args", "env")
+
     def __getattr__(self, k):
         for e in self.args:
             if e.name == k:
@@ -49,11 +53,17 @@ class _SubSelectProperty(ConcreteProperty):
     def projection_name(self):
         return "{}_{}".format(self.prop.record.get_name(), self.prop.name)
 
+    @property
+    def original_name(self):
+        return self.prop.orignal_name
+
     def __getattr__(self, k):
         return getattr(self.prop, k)
 
 
 class From(Clause):
+    __slots__ = ("args", "env")
+
     def __getattr__(self, k):
         for record in self.tables():
             if record.get_name() == k:
@@ -73,6 +83,8 @@ class From(Clause):
 
 
 class Where(Clause):
+    __slots__ = ("args", "env")
+
     def __init__(self, *args, env=None):
         super().__init__(*args, env=env)
         if len(self.args) > 1:
@@ -92,6 +104,8 @@ class OrderBy(Clause):
 
 
 class Having(Clause):
+    __slots__ = ("args", "env")
+
     def __init__(self, *args, env=None):
         super().__init__(*args, env=env)
         if len(self.args) > 1:

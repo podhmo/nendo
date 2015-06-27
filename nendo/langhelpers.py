@@ -4,6 +4,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class Counter(object):
+    def __init__(self):
+        self.i = 0
+
+    def __call__(self):
+        self.i += 1
+        return self.i
+
+
+COUNTER = Counter()
+
+
 class reify(object):
     def __init__(self, wrapped):
         self.wrapped = wrapped

@@ -1,12 +1,45 @@
 # -*- coding:utf-8 -*-
 from itertools import chain
+from .langhelpers import reify, COUNTER
 from .clause import Select, Where, From, OrderBy, Having, Limit
 from .env import Env
-from .exceptions import ConflictName, MissingName
+from .exceptions import ConflictName, MissingName, InvalidCombination
+from .property import ConcreteProperty
 
 
-class Alias(object):
-    pass
+class _UnionFrom(From):
+    _name = "FROM"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        props = [list(e.props()) for e in self.args]
+        for another in props[1:]:
+            if len(props[0]) != len(another):
+                raise InvalidCombination("conflict number of column {} != {}".format(len(props[0]), len(another)))
+
+    @reify
+    def _props(self):
+        return [_QueryProperty(self.args[0], p, p.name) for p in self.args[0].props()]
+
+    def tables(self):
+        return []
+
+    def props(self):
+        yield from self._props
+
+
+class _QueryProperty(ConcreteProperty):
+    def __init__(self, query, prop, name):
+        self.query = query
+        super().__init__(prop.record, name, prop._key)
+
+    @property
+    def original_name(self):
+        return self.name
+
+    @property
+    def full_name(self):
+        return "{}.{}".format(self.query.get_name(), self.name)
 
 
 class Query(object):
@@ -18,6 +51,9 @@ class Query(object):
         self._order_by = order_by or OrderBy()
         self._having = having or Having()
         self._limit = limit or Limit()
+
+    def union(self, other):
+        return self.__class__(from_=_UnionFrom(self, other))
 
     def make(self, select=None, where=None, from_=None, having=None, order_by=None, limit=None, env=None):
         return self.__class__(
@@ -72,12 +108,15 @@ class Query(object):
         else:
             return self.make(limit=Limit(*chain(self._limit.args, args)))
 
-    def _table_validation(self, context):
+    def _table_validation(self, context, tables):
         # from validation
-        table_name_list = [r.get_name() for r in self.tables()]
+        table_name_list = [r.get_name() for r in tables]
         table_name_set = set(table_name_list)
         if len(table_name_set) != len(table_name_list):
             raise ConflictName(", ".join(table_name_list))
+
+        if not tables:
+            return  # todo:fix (on union query, tables() return empty list)
 
         # select validation
         for prop in self._select.props():
@@ -89,25 +128,44 @@ class Query(object):
                 if table.is_table():
                     raise MissingName(table.get_name())
 
-    def _column_validation(self, context):
+    def _column_validation(self, context, tables):
         prop_name_set = set([p.projection_name for p in self._from.props()])
         # select validation
         for p in self._select.props():
             if p.original_name not in prop_name_set:
-                raise ConflictName("SELECT: {} is not found from FROM clause".format(p.name))
+                raise ConflictName("SELECT: {} is not found from FROM clause in {}".format(p.original_name, prop_name_set))
+
+        if not tables:
+            return  # todo:fix (on union query, tables() return empty list)
 
         # from validation (on)
         for cond in self._from.args:
             for p in cond.props():
                 if p.original_name not in prop_name_set:
-                    raise ConflictName("FROM: {} is not found from FROM clause".format(p.original_name))
+                    raise ConflictName("FROM: {} is not found from FROM clause in {}".format(p.original_name, prop_name_set))
 
     def validate(self, context):
-        self._table_validation(context)
-        self._column_validation(context)
+        tables = self.tables()
+        self._table_validation(context, tables)
+        self._column_validation(context, tables)
 
     def props(self):
         return list(self._select.props()) or list(self._from.props())
 
     def tables(self):
         return list(self._from.tables())
+
+    def __getattr__(self, k):
+        for prop in self.props():
+            if prop.name == k:
+                prop = _QueryProperty(self, prop, prop.name)
+                setattr(self, k, prop)
+                return prop
+        raise AttributeError(k)
+
+    @reify
+    def _name(self):
+        return "_t{}".format(COUNTER())
+
+    def get_name(self):
+        return self._name

@@ -133,6 +133,10 @@ class ConcreteProperty(Property):
     def projection_name(self):
         return self.name
 
+    @property
+    def full_name(self):
+        return "{}.{}".format(self.record.get_name(), self.name)
+
     def __repr__(self):
         return "<P: {}>".format(self.name)
 
