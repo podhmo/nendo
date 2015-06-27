@@ -38,6 +38,16 @@ def lift(method):
     return _lift
 
 
+def liftN(method):
+    @wraps(method)
+    def _lift(self, *args):
+        value = method(self, *[wrap(e) for e in args])
+        for e in args:
+            value.env.merge(self, e)  # side effect
+        return value
+    return _lift
+
+
 class Expr(object):
     @reify
     def env(self):
@@ -117,7 +127,32 @@ class BOp(Expr):
         return "<B: {} {} {}>".format(self.op, self.left, self.right)
 
 
-class TriOp(Expr):  # todo: move
+class TriOp(Expr):
+    __slots__ = ("op", "op2", "left", "middle", "right", "_env")
+
+    def __init__(self, op, op2, left, middle, right, env=None):
+        self.op = op
+        self.op2 = op2
+        self.left = left
+        self.middle = middle
+        self.right = right
+        super().__init__(env=env)
+
+    def __repr__(self):
+        return "<T: {} {} {} {}>".format(self.op, self.left, self.middle, self.right)
+
+    def tables(self):
+        yield from self.left.tables()
+        yield from self.middle.tables()
+        yield from self.right.tables()
+
+    def props(self):
+        yield from self.left.props()
+        yield from self.middle.props()
+        yield from self.right.props()
+
+
+class JoinOp(Expr):  # todo: move
     __slots__ = ("op", "left", "right", "args", "_env")
 
     def __init__(self, op, left, right, args, env=None):
@@ -128,7 +163,7 @@ class TriOp(Expr):  # todo: move
         super().__init__(env=env)
 
     def __repr__(self):
-        return "<T: {} {} {} {}>".format(self.op, self.left, self.right, self.args)
+        return "<J: {} {} {} {}>".format(self.op, self.left, self.right, self.args)
 
     def tables(self):
         yield from self.left.tables()
@@ -171,11 +206,11 @@ Ne = partial(BOp, '<>')
 Is = partial(BOp, 'IS')
 In = partial(BOp, 'IN')
 NotIn = partial(BOp, 'NOT IN')
-Between = partial(BOp, "BETWEEN")
+Between = partial(TriOp, "BETWEEN", "AND")
 Like = partial(BOp, 'LIKE')
 Ilike = partial(BOp, 'ILIKE')
-Join = partial(TriOp, "JOIN")
-LeftOuterJoin = partial(TriOp, "LEFT OUTER JOIN")
-RightOuterJoin = partial(TriOp, "RIGHT OUTER JOIN")
-FullOuterJoin = partial(TriOp, "FULL OUTER JOIN")
-CrossJoin = partial(TriOp, "CROSS JOIN")
+Join = partial(JoinOp, "JOIN")
+LeftOuterJoin = partial(JoinOp, "LEFT OUTER JOIN")
+RightOuterJoin = partial(JoinOp, "RIGHT OUTER JOIN")
+FullOuterJoin = partial(JoinOp, "FULL OUTER JOIN")
+CrossJoin = partial(JoinOp, "CROSS JOIN")

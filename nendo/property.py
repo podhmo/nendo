@@ -1,5 +1,5 @@
 from . import expr
-from .expr import lift, Expr
+from .expr import lift, Expr, liftN
 
 
 class NamedProperty(object):
@@ -95,9 +95,9 @@ class Property(Expr):
     def not_in(self, other):
         return expr.NotIn(self, other)
 
-    @lift
-    def between(self, other):
-        return expr.Between(self, other)
+    @liftN
+    def between(self, left, right):
+        return expr.Between(self, left, right)
 
     @lift
     def like(self, other):

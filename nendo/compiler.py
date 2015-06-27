@@ -3,7 +3,7 @@ from singledispatch import singledispatch
 from datetime import date, datetime, time
 from .query import Query
 from .clause import Clause, SubSelect
-from .expr import BOp, PreOp, PostOp, TriOp, Expr
+from .expr import BOp, PreOp, PostOp, TriOp, JoinOp, Expr
 from .record import RecordMeta
 from .property import ConcreteProperty
 from .alias import AliasRecord, AliasProperty, AliasExpressionProperty, QueryRecord
@@ -79,6 +79,15 @@ def on_postop(op, context, path=None):
 
 @compiler.register(TriOp)
 def on_triop(op, context, path=None):
+    return "({} {} {} {} {})".format(compiler(op.left, context, path=path),
+                                     op.op,
+                                     compiler(op.middle, context, path=path),
+                                     op.op2,
+                                     compiler(op.right, context, path=path))
+
+
+@compiler.register(JoinOp)
+def on_joinop(op, context, path=None):
     r = []
     r.append(compiler(op.left, context, path=path))
     r.append(op.op)
