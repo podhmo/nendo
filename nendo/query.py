@@ -74,8 +74,7 @@ class Query(object):
 
     def _table_validation(self, context):
         # from validation
-        tables = list(self._from.tables())
-        table_name_list = [r.get_name() for r in tables]
+        table_name_list = [r.get_name() for r in self.tables()]
         table_name_set = set(table_name_list)
         if len(table_name_set) != len(table_name_list):
             raise ConflictName(", ".join(table_name_list))
@@ -109,3 +108,6 @@ class Query(object):
 
     def props(self):
         return list(self._select.props()) or list(self._from.props())
+
+    def tables(self):
+        return list(self._from.tables())
