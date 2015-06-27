@@ -162,6 +162,10 @@ class JoinOp(Expr):  # todo: move
     __slots__ = ("op", "left", "right", "args", "_env")
 
     def __init__(self, op, left, right, args, env=None):
+        if not hasattr(left, "join"):
+            raise InvalidCombination(left)
+        if not hasattr(right, "join"):
+            raise InvalidCombination(right)
         self.op = op
         self.left = left
         self.right = right
