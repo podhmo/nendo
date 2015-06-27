@@ -106,6 +106,9 @@ class QueryRecord(_Joinable):
     def union(self, other, *args):
         return self.__class__(self.query.union(other), self._name, swapped=True)
 
+    def union_all(self, other, *args):
+        return self.__class__(self.query.union_all(other), self._name, swapped=True)
+
     def __call__(self):
         return QueryBodyRecord(self.query, self._name, swapped=True)
 

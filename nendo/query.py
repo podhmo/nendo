@@ -1,13 +1,14 @@
 # -*- coding:utf-8 -*-
 from itertools import chain
+from functools import partial
 from .langhelpers import reify, COUNTER
-from .clause import Select, Where, From, OrderBy, Having, Limit
+from .clause import Select, Where, From, OrderBy, Having, Limit, GroupBy
 from .env import Env
 from .exceptions import ConflictName, MissingName, InvalidCombination
 from .property import ConcreteProperty
 
 
-class _UnionFrom(From):
+class _QueryFrom(From):
     _name = "FROM"
 
     def __init__(self, *args, **kwargs):
@@ -19,13 +20,24 @@ class _UnionFrom(From):
 
     @reify
     def _props(self):
-        return [_QueryProperty(self.args[0], p, p.name) for p in self.args[0].props()]
+        try:
+            return [_QueryProperty(self.args[0], p, p.name) for p in self.args[0].props()]
+        except:
+            import pdb; pdb.set_trace()
 
     def tables(self):
         return []
 
     def props(self):
         yield from self._props
+
+
+class _UnionFrom(_QueryFrom):
+    separator = "UNION"
+
+
+class _UnionAllFrom(_QueryFrom):
+    separator = "UNION ALL"
 
 
 class _QueryProperty(ConcreteProperty):
@@ -43,11 +55,12 @@ class _QueryProperty(ConcreteProperty):
 
 
 class Query(object):
-    def __init__(self, select=None, where=None, from_=None, having=None, order_by=None, limit=None, env=None):
+    def __init__(self, select=None, where=None, from_=None, having=None, group_by=None, order_by=None, limit=None, env=None):
         self.env = env or Env()
         self._select = select or Select()
         self._where = where or Where()
         self._from = from_ or From()
+        self._group_by = group_by or GroupBy()
         self._order_by = order_by or OrderBy()
         self._having = having or Having()
         self._limit = limit or Limit()
@@ -55,11 +68,15 @@ class Query(object):
     def union(self, other):
         return self.__class__(from_=_UnionFrom(self, other))
 
-    def make(self, select=None, where=None, from_=None, having=None, order_by=None, limit=None, env=None):
+    def union_all(self, other):
+        return self.__class__(from_=_UnionAllFrom(self, other))
+
+    def make(self, select=None, where=None, from_=None, having=None, group_by=None, order_by=None, limit=None, env=None):
         return self.__class__(
             select=select or self._select.make(),
             where=where or self._where.make(),
             from_=from_ or self._from.make(),
+            group_by=group_by or self._group_by.make(),
             order_by=order_by or self._order_by.make(),
             having=having or self._having.make(),
             limit=limit or self._limit.make(),
@@ -95,6 +112,12 @@ class Query(object):
             return self.make(order_by=OrderBy(*args))
         else:
             return self.make(order_by=OrderBy(*chain(self._order_by.args, args)))
+
+    def group_by(self, *args, replace=False):
+        if replace:
+            return self.make(group_by=GroupBy(*args))
+        else:
+            return self.make(group_by=GroupBy(*chain(self._group_by.args, args)))
 
     def having(self, *args, replace=False):
         if replace:

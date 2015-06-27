@@ -103,6 +103,10 @@ class OrderBy(Clause):
     _name = "ORDER BY"
 
 
+class GroupBy(Clause):
+    _name = "GROUP BY"
+
+
 class Having(Clause):
     __slots__ = ("args", "env")
 

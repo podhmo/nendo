@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from singledispatch import singledispatch
 from datetime import date, datetime, time
-from .query import Query, _UnionFrom, _QueryProperty
+from .query import Query, _QueryFrom, _QueryProperty
 from .clause import Clause, _SubSelectProperty
 from .expr import BOp, PreOp, PostOp, TriOp, JoinOp, Expr
 from .record import RecordMeta
@@ -46,6 +46,8 @@ def on_query(query, context, options=None, path=None):
 
     if not query._where.is_empty():
         r.append(compiler(query._where, context, options=options, path=path))
+    if not query._group_by.is_empty():
+        r.append(compiler(query._group_by, context, options=options, path=path))
     if not query._order_by.is_empty():
         r.append(compiler(query._order_by, context, options=options, path=path))
     if not query._having.is_empty():
@@ -64,12 +66,12 @@ def on_clause(clause, context, options=None, path=None):
     return "{} {}".format(clause.get_name(), ", ".join(compiler(e, context, options=options, path=path) for e in clause.args))
 
 
-@compiler.register(_UnionFrom)
+@compiler.register(_QueryFrom)
 def on_union_from(clause, context, options=None, path=None):
     r = []
     for e in clause.args:
         r.append("{}".format(compiler(e, context, options=options, path=path)))
-    return "{} ({}) as {}".format(clause.get_name(), " UNION ".join(r), clause.args[0].get_name())
+    return "{} ({}) as {}".format(clause.get_name(), " {} ".format(clause.separator).join(r), clause.args[0].get_name())
 
 
 @compiler.register(BOp)
