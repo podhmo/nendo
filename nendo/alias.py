@@ -2,6 +2,7 @@
 from singledispatch import singledispatch
 from .record import RecordMeta
 from .property import ConcreteProperty
+from .value import Function
 from .query import Query
 from . import expr
 
@@ -47,7 +48,7 @@ class AliasRecord(object):
 
     def __getattr__(self, k):
         value = getattr(self._core, k)
-        if isinstance(value, ConcreteProperty):
+        if isinstance(value, (ConcreteProperty, Function)):
             value = self.PropertyFactory(self, value, prefix=self._prefix)
             setattr(self, k, value)
         return value
@@ -73,6 +74,9 @@ class QueryRecord(object):
     def __init__(self, query, name, swapped=False):
         self.query = query.swap(name) if not swapped else query
         self._name = name
+
+    def is_table(self):
+        return False  # xxx
 
     def __getattr__(self, k):
         value = getattr(self.query._from, k)
@@ -112,6 +116,10 @@ class QueryRecord(object):
 class QueryBodyRecord(QueryRecord):
     """record like object but this is unfolded like a subquery"""
     RecordFactory = AliasExpressionRecord
+
+
+def subquery(query, name=None):
+    return QueryBodyRecord(query, name=name)
 
 
 @singledispatch

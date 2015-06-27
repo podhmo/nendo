@@ -2,6 +2,7 @@
 from .env import Env
 from .expr import wrap
 from .property import ConcreteProperty
+from .value import Function, Constant
 
 
 class Clause(object):
@@ -31,7 +32,7 @@ class Select(Clause):
             yield from e.props()
 
     def swap(self, query, name):
-        return SubSelect(*[_SubSelectProperty(query, e) for e in self.args])
+        return SubSelect(*[e if isinstance(e, (Function, Constant)) else _SubSelectProperty(query, e) for e in self.args])
 
 
 class SubSelect(Select):

@@ -90,9 +90,9 @@ class Tests(unittest.TestCase):
 
     def test_between(self):
         T = self._makeRecord("T", "id, l, r")
-        target = self._makeQuery().from_(T).where(T.l.between(T.r))
+        target = self._makeQuery().from_(T).where(T.l.between(1, 2))
         result = self._callFUT(target, {})
-        expected = "SELECT T.id, T.l, T.r FROM T WHERE (T.l BETWEEN T.r)"
+        expected = "SELECT T.id, T.l, T.r FROM T WHERE (T.l BETWEEN 1 AND 2)"
         self.assertEqual(result, expected)
 
     def test_alias_column(self):
@@ -167,12 +167,12 @@ class Tests(unittest.TestCase):
             self._callFUT(target, {})
 
     def test_subquery_as_column(self):
-        from nendo.alias import alias
+        from nendo.alias import subquery
         tb2 = self._makeRecord("tb2", "id id2")
         tb1 = self._makeRecord("tb1", "id tb2_id")
         q = self._makeQuery().from_(tb2, tb1).where(tb2.id == tb1.tb2_id).select(tb2.id2)
-        sub_q = alias(q, "sub_q")
-        target = self._makeQuery().from_(tb1).where(tb1.tb2_id == sub_q().tb2.id).select(tb1.id)
+        sub_q = subquery(q, "sub_q")
+        target = self._makeQuery().from_(tb1).where(tb1.tb2_id == sub_q.tb2.id).select(tb1.id)
         result = self._callFUT(target, {})
         expected = "SELECT tb1.id FROM tb1 WHERE ((SELECT tb2.id2 as tb2_id2 FROM tb2, tb1 WHERE (tb2.id = tb1.tb2_id)) = tb1.tb2_id)"
         self.assertEqual(result, expected)
