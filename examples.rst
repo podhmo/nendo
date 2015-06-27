@@ -71,3 +71,28 @@ examples/03.py
 
   ("SELECT employee.emp_id, employee.fname, employee.lname, employee.start_date, employee.end_date, employee.superior_emp_id, employee.dept_id, employee.title, employee.assigned_branch_id FROM employee WHERE (((employee.end_date IS NULL) AND (employee.title = 'Teller')) OR (employee.start_date < '2003-01-01'))", [])
 
+examples/04.py
+
+.. code-block:: python
+
+  
+  """
+  SELECT emp_id, fname, lname, start_date FROM employee
+  WHERE start_date
+  BETWEEN date('2001-01-01') AND date('2002-12-31');
+  """
+  
+  from nendo import Query, make_record, render, alias
+  from datetime import date
+  
+  Employee = make_record("employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
+  e = alias(Employee, "e")
+  query = (Query()
+           .from_(e)
+           .where((e.start_date.between(date(2001, 1, 1), date(2002, 12, 31)))))
+  print(render(query))
+
+.. code-block:: sql
+
+  ("SELECT e.emp_id, e.fname, e.lname, e.start_date, e.end_date, e.superior_emp_id, e.dept_id, e.title, e.assigned_branch_id FROM employee as e WHERE (e.start_date BETWEEN '2001-01-01' AND '2002-12-31')", [])
+
