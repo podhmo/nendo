@@ -12,7 +12,7 @@ from .options import Options
 
 
 ARGS = "__i_args"  # xxx: this is the keyname of stored arguments
-DEFAULT_OPTIONS = Options(use_validation=True, one_table=False, one_line_sql=True)
+DEFAULT_OPTIONS = Options(use_validation=True, one_table=False, one_line_sql=True, interpolation="%s")
 
 
 @singledispatch
@@ -169,12 +169,12 @@ def on_alias_expression_property(prop, context, options=None, path=None):
 def on_prepared(v, context, options=None, path=None):
     if not path:
         context[ARGS].append(context[v.key])
-        return "%s"
+        return options.interpolation
     else:
         path.append(v.key)
         k = ".".join(path)
         context[ARGS].append(context[k])  # side-effect!
-        return "%s"
+        return options.interpolation
 
 
 @compiler.register(List)  # list is not python's list
