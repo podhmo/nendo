@@ -85,6 +85,7 @@ class Prepared(Value):
 
 
 NULL = Constant("NULL")
+STAR = ALL = Constant("*")
 
 
 class FunctionPool(object):

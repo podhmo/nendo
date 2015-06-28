@@ -7,6 +7,13 @@ from .query import Query
 from . import expr
 
 
+class AliasFunction(Function):
+    def __init__(self, fn, alias_name):
+        super().__init__(fn.value, *fn.args)
+        self.fn = fn
+        self.alias_name = alias_name
+
+
 class AliasRecordProperty(ConcreteProperty):
     def __init__(self, alias, prop, prefix=""):
         name = "{}{}".format(prefix, prop.name)
@@ -49,13 +56,13 @@ class AliasRecord(_Joinable):
     PropertyFactory = AliasRecordProperty
 
     def __init__(self, core, name, prefix="", parent=None):
-        self._name = name
+        self.alias_name = name
         self._core = core
         self._prefix = prefix
         self._parent = parent
 
     def get_name(self):
-        return self._name
+        return self.alias_name
 
     def is_table(self):
         return True
@@ -87,7 +94,7 @@ class QueryRecord(_Joinable):
 
     def __init__(self, query, name, swapped=False):
         self.query = query.swap(name) if not swapped else query
-        self._name = name
+        self.alias_name = name
 
     def is_table(self):
         return False  # xxx
@@ -96,21 +103,21 @@ class QueryRecord(_Joinable):
         value = getattr(self.query._from, k)
         if isinstance(value, RecordMeta):  # xxx:
             prefix = "{}_".format(value.get_name())
-            value = self.RecordFactory(value, self._name, prefix=prefix, parent=self)
+            value = self.RecordFactory(value, self.alias_name, prefix=prefix, parent=self)
             setattr(self, k, value)
         return value
 
     def get_name(self):
-        return self._name
+        return self.alias_name
 
     def union(self, other, *args):
-        return self.__class__(self.query.union(other), self._name, swapped=True)
+        return self.__class__(self.query.union(other), self.alias_name, swapped=True)
 
     def union_all(self, other, *args):
-        return self.__class__(self.query.union_all(other), self._name, swapped=True)
+        return self.__class__(self.query.union_all(other), self.alias_name, swapped=True)
 
     def __call__(self):
-        return QueryBodyRecord(self.query, self._name, swapped=True)
+        return QueryBodyRecord(self.query, self.alias_name, swapped=True)
 
     def tables(self):
         yield self
@@ -148,3 +155,8 @@ def on_record(record, name):
 @alias.register(ConcreteProperty)
 def on_property(prop, name):
     return AliasProperty(prop, name)
+
+
+@alias.register(Function)
+def on_function(fn, name):
+    return AliasFunction(fn, name)

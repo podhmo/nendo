@@ -2,11 +2,11 @@
 from singledispatch import singledispatch
 from datetime import date, datetime, time
 from .query import Query, _QueryFrom, _QueryProperty
-from .clause import Clause, _SubSelectProperty, Select
+from .clause import Clause, _SubSelectProperty
 from .expr import BOp, PreOp, PostOp, TriOp, JoinOp, Expr
 from .record import RecordMeta
 from .property import ConcreteProperty
-from .alias import AliasRecord, AliasProperty, AliasExpressionProperty, QueryRecord
+from .alias import AliasRecord, AliasProperty, AliasExpressionProperty, AliasFunction, QueryRecord
 from .value import Value, Prepared, List, Constant, Function
 from .options import Options
 
@@ -197,6 +197,11 @@ def on_constant(v, context, options=None, path=None):
 @compiler.register(Function)
 def on_function(v, context, options=None, path=None):
     return "{}({})".format(v.value, ", ".join(compiler(e, context, options=options, path=path) for e in v.args))
+
+
+@compiler.register(AliasFunction)
+def on_alias_function(v, context, options=None, path=None):
+    return "{} as {}".format(compiler(v.fn, context, options=options, path=path), v.alias_name)
 
 
 @compiler.register(Value)
