@@ -4,6 +4,7 @@ examples/01.py
 
   
   """
+  -- The order by clause
   SELECT account_id, product_cd, open_date, avail_balance
   FROM account
   ORDER BY avail_balance DESC;
@@ -27,6 +28,7 @@ examples/02.py
 
   
   """
+  -- select explicitly
   SELECT open_emp_id, product_cd
   FROM account
   ORDER BY open_emp_id, product_cd;
@@ -54,6 +56,7 @@ examples/03.py
 
   
   """
+  -- Using the is null operator and the date literal
   SELECT *
   FROM employee
   WHERE end_date IS NULL AND (title = 'Teller' OR start_date < '2003-01-01');
@@ -83,6 +86,7 @@ examples/04.py
 
   
   """
+  -- Range condition with the between operator
   SELECT emp_id, fname, lname, start_date FROM employee
   WHERE start_date
   BETWEEN date('2001-01-01') AND date('2002-12-31');
@@ -110,6 +114,7 @@ examples/05.py
 
   
   """
+  -- Membership conditions
   SELECT emp_id, fname, lname, start_date FROM employee
   WHERE start_date
   BETWEEN date('2001-01-01') AND date('2002-12-31');
@@ -137,6 +142,7 @@ examples/06.py
 
   
   """
+  -- placeholder
   SELECT ALL e.emp_id AS f0,
              e.fname AS f1,
              e.lname AS f2,
@@ -168,6 +174,7 @@ examples/07.py
 
   
   """
+  -- Membership conditions
   SELECT account_id, product_cd, cust_id, avail_balance
   FROM account
   WHERE product_cd IN ('CHK', 'SAV', 'CD', 'MM');
@@ -193,6 +200,7 @@ examples/08.py
 
   
   """
+  -- subquery
   SELECT account_id, product_cd, cust_id, avail_balance
   FROM account
   WHERE account_id = (SELECT MAX(account_id)
@@ -221,6 +229,7 @@ examples/09.py
 
   
   """
+  -- Membership conditions using subqueries
   SELECT account_id, product_cd, cust_id, avail_balance
   FROM account
   WHERE product_cd IN (SELECT product_cd
@@ -254,6 +263,7 @@ examples/10.py
 
   
   """
+  -- join
   SELECT e.fname, e.lname, d.name
   FROM employee e INNER JOIN department d
   USING (dept_id);
@@ -280,6 +290,7 @@ examples/11.py
 
   
   """
+  -- Complex join
   SELECT a.account_id, a.cust_id, a.open_date, a.product_cd
   FROM account a INNER JOIN employee e ON a.open_emp_id = e.emp_id
   INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
@@ -318,13 +329,13 @@ examples/12.py
 
   
   """
+  -- self-join
   SELECT e.fname, e.lname, e_mgr.fname mgr_fname, e_mgr.lname mgr_lname
   FROM employee e INNER JOIN employee e_mgr
   ON e.superior_emp_id = e_mgr.emp_id
   """
   
   from nendo import Query, make_record, render, alias
-  from datetime import date
   
   Employee = make_record("employee", "emp_id, fname, lname, start_date, end_date, superior_emp_id, dept_id, title, assigned_branch_id")
   e = alias(Employee, "e")
@@ -348,6 +359,7 @@ examples/13.py
 
   
   """
+  -- Sorting compound query results (union)
   SELECT emp_id, assigned_branch_id
   FROM employee
   WHERE title = 'Teller'
@@ -382,4 +394,72 @@ result:
 
   ("SELECT _t1.emp_id, _t1.branch_id FROM (SELECT emp_id, assigned_branch_id as branch_id FROM employee WHERE (title = 'Teller') UNION SELECT open_emp_id as emp_id, open_branch_id as branch_id FROM account WHERE (product_cd = 'SAV')) as _t1", [])
   ("SELECT _t1.emp_id, _t1.branch_id FROM (SELECT emp_id, assigned_branch_id as branch_id FROM employee WHERE (title = 'Teller') UNION SELECT open_emp_id as emp_id, open_branch_id as branch_id FROM account WHERE (product_cd = 'SAV')) as _t1 ORDER BY _t1.emp_id", [])
+
+examples/14.py
+
+.. code-block:: python
+
+  
+  """
+  -- grouping
+  SELECT open_emp_id, COUNT(*) how_many
+  FROM account
+  GROUP BY open_emp_id
+  ORDER BY open_emp_id;
+  """
+  
+  from nendo import Query, make_record, render, alias
+  from nendo.value import fn, ALL
+  
+  Account = make_record("account", "account_id product_cd open_date avail_balance open_emp_id")
+  
+  query = (Query()
+           .from_(Account)
+           .group_by(Account.open_emp_id)
+           .order_by(Account.open_emp_id)
+           .select(Account.open_emp_id, alias(fn.count(ALL), "how_many")))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ('SELECT open_emp_id, count(*) as how_many FROM account GROUP BY open_emp_id ORDER BY open_emp_id', [])
+
+examples/15.py
+
+.. code-block:: python
+
+  
+  """
+  -- Correlated Subqueries
+  SELECT c.cust_id, c.cust_type_cd, c.city
+  FROM customer c
+  WHERE 2 = (SELECT COUNT(*)
+             FROM account a
+             WHERE a.cust_id = c.cust_id);
+  """
+  
+  from nendo import Query, make_record, render, alias, subquery
+  from nendo.value import fn, ALL, Value
+  
+  Account = make_record("account", "account_id product_cd open_date avail_balance cust_id")
+  Customer = make_record("customer", "cust_id cust_type_cd city")
+  a = alias(Account, "a")
+  c = alias(Customer, "c")
+  sub_q = (Query()
+           .select(fn.count(ALL))
+           .from_(a)
+           .where(a.cust_id == c.cust_id.correlated()))
+  query = (Query()
+           .from_(c)
+           .where(Value(2) == subquery(sub_q, "sub_q"))
+           .select(c.cust_id, c.cust_type_cd, c.city))
+  print(render(query))
+
+result:
+
+.. code-block:: sql
+
+  ('SELECT cust_id, cust_type_cd, city FROM customer as c WHERE (2 = (SELECT count(*) FROM account as a WHERE (cust_id = cust_id)) as sub_q)', [])
 
