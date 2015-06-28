@@ -453,7 +453,7 @@ examples/15.py
            .where(a.cust_id == c.cust_id.correlated()))
   query = (Query()
            .from_(c)
-           .where(Value(2) == subquery(sub_q, "sub_q"))
+           .where(Value(2) == subquery(sub_q))
            .select(c.cust_id, c.cust_type_cd, c.city))
   print(render(query))
 
@@ -461,5 +461,5 @@ result:
 
 .. code-block:: sql
 
-  ('SELECT cust_id, cust_type_cd, city FROM customer as c WHERE (2 = (SELECT count(*) FROM account as a WHERE (cust_id = cust_id)) as sub_q)', [])
+  ('SELECT cust_id, cust_type_cd, city FROM customer as c WHERE (2 = (SELECT count(*) FROM account as a WHERE (cust_id = cust_id)))', [])
 
