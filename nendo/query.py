@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 from itertools import chain
-from functools import partial
 from .langhelpers import reify, COUNTER
 from .clause import Select, Where, From, OrderBy, Having, Limit, GroupBy
 from .env import Env
@@ -20,10 +19,7 @@ class _QueryFrom(From):
 
     @reify
     def _props(self):
-        try:
-            return [_QueryProperty(self.args[0], p, p.name) for p in self.args[0].props()]
-        except:
-            import pdb; pdb.set_trace()
+        return [_QueryProperty(self.args[0], p, p.name) for p in self.args[0].props()]
 
     def tables(self):
         return []
@@ -145,12 +141,12 @@ class Query(object):
         # select validation
         for prop in self._select.props():
             if prop.record.get_name() not in table_name_set:
-                raise MissingName("{}.{}".format(prop.record.get_name(), prop.name))
+                raise MissingName("SELECT: table {}.{} is not in {}".format(prop.record.get_name(), prop.name, table_name_set))
         # where validation
         for table in set(self._where.tables()):
             if table.get_name() not in table_name_set:
                 if table.is_table():
-                    raise MissingName(table.get_name())
+                    raise MissingName("WHERE: table {} is not in {}".format(table.get_name(), table_name_set))
 
     def _column_validation(self, context, tables):
         prop_name_set = set([p.projection_name for p in self._from.props()])

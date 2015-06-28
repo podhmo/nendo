@@ -123,7 +123,22 @@ class Property(Expr):
 
 
 class ConcreteProperty(Property):
-    __slots__ = ("record", "_key")
+    __slots__ = ("record", "_key", "is_correlated")
+
+    def __init__(self, record, name, key, correlated=False):
+        self.record = record
+        self.name = name
+        self._key = key
+        self.is_correlated = correlated
+        super().__init__()
+
+    def make(self):
+        return self.__class__(self.record, self.name, self.key)
+
+    def correlated(self):
+        instance = self.make()
+        instance.is_correlated = True
+        return instance
 
     @property
     def original_name(self):
@@ -140,14 +155,9 @@ class ConcreteProperty(Property):
     def __repr__(self):
         return "<P: {}>".format(self.name)
 
-    def __init__(self, record, name, key):
-        self.record = record
-        self.name = name
-        self._key = key
-        super().__init__()
-
     def tables(self):
-        yield self.record
+        if not self.is_correlated:
+            yield self.record
 
     def props(self):
         yield self

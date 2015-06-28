@@ -15,17 +15,21 @@ class AliasFunction(Function):
 
 
 class AliasRecordProperty(ConcreteProperty):
-    def __init__(self, alias, prop, prefix=""):
-        name = "{}{}".format(prefix, prop.name)
+    def __init__(self, alias, prop, name):
         super().__init__(alias, name, prop._key)
         self.prop = prop
+
+    def make(self):
+        return self.__class__(self.record, self.prop, self.name)
 
 
 class AliasExpressionProperty(ConcreteProperty):
-    def __init__(self, alias, prop, prefix=""):
-        name = "{}{}".format(prefix, prop.name)
+    def __init__(self, alias, prop, name):
         super().__init__(alias, name, prop._key)
         self.prop = prop
+
+    def make(self):
+        return self.__class__(self.record, self.prop, self.name)
 
 
 class AliasProperty(ConcreteProperty):  # todo: cache via weak reference
@@ -70,7 +74,8 @@ class AliasRecord(_Joinable):
     def __getattr__(self, k):
         value = getattr(self._core, k)
         if isinstance(value, (ConcreteProperty, Function)):
-            value = self.PropertyFactory(self, value, prefix=self._prefix)
+            alias_name = "{}{}".format(self._prefix, value.name)
+            value = self.PropertyFactory(self, value, alias_name)
             setattr(self, k, value)
         return value
 
@@ -79,6 +84,9 @@ class AliasRecord(_Joinable):
 
     def props(self):
         return [getattr(self, p.name) for p in self._core.props()]
+
+    def swap(self, name):  # xxx
+        return self
 
 
 class AliasExpressionRecord(AliasRecord):
@@ -121,6 +129,9 @@ class QueryRecord(_Joinable):
 
     def tables(self):
         yield self
+
+    def swap(self, name):  # xxx
+        return self
 
     def props(self):
         for prop in self.query.props():
