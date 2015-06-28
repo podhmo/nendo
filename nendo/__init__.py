@@ -15,10 +15,13 @@ def render(query, **context):
     sql = compiler(query, context, options=options)
     return (sql, context[ARGS])
 
+SelectQuery = Query
+
 __all__ = [
     "make_record",
     "alias",
     "Query",
+    "SelectQuery",
     "render",
     "subquery"
 ]
