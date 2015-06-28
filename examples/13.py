@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
+-- Sorting compound query results (union)
 SELECT emp_id, assigned_branch_id
 FROM employee
 WHERE title = 'Teller'

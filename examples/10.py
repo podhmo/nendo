@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
+-- join
 SELECT e.fname, e.lname, d.name
 FROM employee e INNER JOIN department d
 USING (dept_id);

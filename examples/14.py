@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
+-- grouping
 SELECT open_emp_id, COUNT(*) how_many
 FROM account
 GROUP BY open_emp_id

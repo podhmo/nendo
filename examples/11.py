@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
+-- Complex join
 SELECT a.account_id, a.cust_id, a.open_date, a.product_cd
 FROM account a INNER JOIN employee e ON a.open_emp_id = e.emp_id
 INNER JOIN branch b ON e.assigned_branch_id = b.branch_id

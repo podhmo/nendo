@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
+-- placeholder
 SELECT ALL e.emp_id AS f0,
            e.fname AS f1,
            e.lname AS f2,

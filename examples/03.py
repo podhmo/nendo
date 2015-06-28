@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
+-- Using the is null operator and the date literal
 SELECT *
 FROM employee
 WHERE end_date IS NULL AND (title = 'Teller' OR start_date < '2003-01-01');

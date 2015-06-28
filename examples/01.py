@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
+-- The order by clause
 SELECT account_id, product_cd, open_date, avail_balance
 FROM account
 ORDER BY avail_balance DESC;
